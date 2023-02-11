@@ -1,9 +1,21 @@
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 module.exports = ({ env }) => ({
-  'users-permissions': {
+  "users-permissions": {
     config: {
-      jwtSecret: env('JWT_SECRET') || crypto.randomBytes(16).toString('base64'),
+      jwtSecret: env("JWT_SECRET") || crypto.randomBytes(16).toString("base64"),
+    },
+  },
+  email: {
+    config: {
+      provider: "sendgrid",
+      providerOptions: {
+        apiKey: env("SENDGRID_API_KEY"),
+      },
+      settings: {
+        defaultFrom: "skabir.dev@gmail.com",
+        defaultReplyTo: "skabir.dev@gmail.com",
+      },
     },
   },
 });
