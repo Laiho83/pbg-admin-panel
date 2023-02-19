@@ -65,6 +65,12 @@
     },
     "favourites": {
       "type": "json"
+    },
+    "continueWatching": {
+      "type": "json"
+    },
+    "progress": {
+      "type": "json"
     }
   }
 }
