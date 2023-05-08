@@ -71,6 +71,9 @@
     },
     "progress": {
       "type": "json"
+    },
+    "payment": {
+      "type": "json"
     }
   }
 }
