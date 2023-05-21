@@ -74,6 +74,11 @@
     },
     "payment": {
       "type": "json"
+    },
+    "stripeCustomerId": {
+      "type": "string",
+      "unique": true,
+      "private": true
     }
   }
 }
