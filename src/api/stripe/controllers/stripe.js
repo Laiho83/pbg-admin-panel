@@ -3,19 +3,20 @@
 /**
  * A set of functions called "actions" for `stripe`
  */
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const PRICE_ID_ONE_MONTH = process.env.PRICE_ID_ONE_MONTH;
-const endpointSecret =
-  "whsec_f4f1a11d8dcea0dc2b548c7647df5328e0132c1f63341ebb09e9f634ead666b6";
+
+const endpointSecret = process.env.STRIPE_END_POINT_SECRET;
 
 const stripe = require("stripe")(STRIPE_SECRET_KEY);
+
+const emailTemplates = require("./email.js");
 
 const unparsed = require("koa-body/unparsed.js");
 
 module.exports = {
   async webhook(ctx) {
     const body = ctx.request.body[unparsed];
-
     const signature = ctx.request.headers["stripe-signature"];
 
     let event;
@@ -37,7 +38,8 @@ module.exports = {
         const checkoutSessionCompleted = event.data.object;
 
         subs = module.exports.setSubscriberRoleByEmail(
-          checkoutSessionCompleted.customer_email
+          checkoutSessionCompleted.customer_email,
+          checkoutSessionCompleted.customer
         );
 
         break;
@@ -53,13 +55,13 @@ module.exports = {
     }
   },
 
-  setSubscriberRoleByEmail: async (email) => {
+  setSubscriberRoleByEmail: async (email, customer) => {
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
           where: { email: email },
-          data: { role: 3 },
+          data: { role: 3, stripeCustomerId: customer },
         })
         .then(() => {
           return true;
@@ -92,67 +94,17 @@ module.exports = {
     ctx.response.status = 200;
   },
 
-  createCustomer: async (ctx) => {
-    let customer;
+  bankPayment: async (ctx) => {
+    const email = ctx.state.user.email;
 
-    try {
-      customer = await stripe.customers
-        .create({
-          email: ctx.state.user.email,
-          name: ctx.request.body["name"],
-        })
-        .then(async (res) => {
-          await strapi.query("plugin::users-permissions.user").update({
-            where: { id: ctx.state.user.id },
-            data: { stripeCustomerId: res.id },
-          });
-
-          ctx.body = 200;
-        });
-    } catch (err) {
-      return res.status(400).send({ error: { message: error.message } });
-    }
-  },
-
-  updateStrapiCustomer: async (stripeCustomerId) => {
-    console.log("Customer: ", customer.id);
-
-    try {
-      await strapi
-        .query("plugin::users-permissions.user")
-        .update({
-          where: { id: ctx.state.user.id },
-          data: { stripeCustomerId },
-        })
-        .then((res) => {
-          ctx.response.status = 200;
-        });
-      ctx.body = entry;
-    } catch (err) {
-      ctx.body = err;
-    }
-  },
-
-  updateStrapiCustomer: async (stripeCustomerId) => {
-    console.log("Customer: ", customer.id);
-
-    try {
-      await strapi
-        .query("plugin::users-permissions.user")
-        .update({
-          where: { id: ctx.state.user.id },
-          data: { stripeCustomerId },
-        })
-        .then((res) => {
-          ctx.response.status = 200;
-        });
-      ctx.body = entry;
-    } catch (err) {
-      ctx.body = err;
-    }
-  },
-
-  exampleAction: async (ctx) => {
-    ctx.response.status = 200;
+    await strapi.plugins["email"].services.email.sendTemplatedEmail(
+      {
+        to: "samir.kabir83@gmail.com",
+      },
+      emailTemplates.bankEmailTemplate(),
+      {
+        user: [],
+      }
+    );
   },
 };
