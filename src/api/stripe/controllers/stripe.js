@@ -37,8 +37,8 @@ module.exports = {
       case "checkout.session.completed":
         const checkoutSessionCompleted = event.data.object;
 
-        subs = module.exports.setSubscriberRoleByEmail(
-          checkoutSessionCompleted.customer_email,
+        subs = module.exports.setSubscriberRoleById(
+          checkoutSessionCompleted.client_reference_id,
           checkoutSessionCompleted.customer
         );
 
@@ -52,6 +52,22 @@ module.exports = {
       ctx.response.status = 200;
     } else {
       return ctx.badRequest(`Subscription Error: ${subs}`);
+    }
+  },
+
+  setSubscriberRoleById: async (customerId, customer) => {
+    try {
+      await strapi
+        .query("plugin::users-permissions.user")
+        .update({
+          where: { id: customerId },
+          data: { role: 3, stripeCustomerId: customer },
+        })
+        .then(() => {
+          return true;
+        });
+    } catch (err) {
+      return err;
     }
   },
 
