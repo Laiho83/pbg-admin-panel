@@ -13,8 +13,15 @@ module.exports = ({ env }) => ({
         apiKey: env("SENDGRID_API_KEY"),
       },
       settings: {
-        defaultFrom: "skabir.deve@gmail.com",
-        defaultReplyTo: "skabir.deve@gmail.com",
+        defaultFrom: "pbgww.dev@gmail.com",
+        defaultReplyTo: "pbgww.dev@gmail.com",
+      },
+    },
+  },
+  "users-permissions": {
+    config: {
+      jwt: {
+        expiresIn: "7d",
       },
     },
   },
