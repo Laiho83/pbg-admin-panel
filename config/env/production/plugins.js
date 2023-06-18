@@ -4,6 +4,7 @@ module.exports = ({ env }) => ({
   "users-permissions": {
     config: {
       jwtSecret: env("JWT_SECRET") || crypto.randomBytes(16).toString("base64"),
+      expiresIn: "7d",
     },
   },
   email: {
@@ -15,13 +16,6 @@ module.exports = ({ env }) => ({
       settings: {
         defaultFrom: "pbgww.dev@gmail.com",
         defaultReplyTo: "pbgww.dev@gmail.com",
-      },
-    },
-  },
-  "users-permissions": {
-    config: {
-      jwt: {
-        expiresIn: "7d",
       },
     },
   },
