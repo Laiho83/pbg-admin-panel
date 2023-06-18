@@ -113,14 +113,21 @@ module.exports = {
   bankPayment: async (ctx) => {
     const email = ctx.state.user.email;
 
-    await strapi.plugins["email"].services.email.sendTemplatedEmail(
-      {
-        to: "samir.kabir83@gmail.com",
-      },
-      emailTemplates.bankEmailTemplate(),
-      {
-        user: [],
-      }
-    );
+    try {
+      await strapi.plugins["email"].services.email.sendTemplatedEmail(
+        {
+          to: "samir.kabir83@gmail.com",
+        },
+        emailTemplates.bankEmailTemplate(),
+        {
+          user: [],
+        }
+      );
+      ctx.response.status = 200;
+      ctx.response.body = JSON.stringify("Email send");
+    } catch (err) {
+      ctx.body = err;
+      ctx.badRequest(`Email not send: ${err}`);
+    }
   },
 };
