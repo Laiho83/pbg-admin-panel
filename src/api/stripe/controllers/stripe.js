@@ -55,6 +55,12 @@ module.exports = {
     }
   },
 
+  async webhookPayPal(ctx) {
+    const body = ctx.request.body[unparsed];
+
+    console.log("PayPal webhook called: ", ctx);
+  },
+
   setSubscriberRoleById: async (customerId, customer) => {
     try {
       await strapi
@@ -116,7 +122,7 @@ module.exports = {
     try {
       await strapi.plugins["email"].services.email.sendTemplatedEmail(
         {
-          to: "samir.kabir83@gmail.com",
+          to: "pbgww.dev@gmail.com",
         },
         emailTemplates.bankEmailTemplate(),
         {

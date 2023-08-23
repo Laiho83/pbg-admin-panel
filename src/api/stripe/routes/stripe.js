@@ -10,6 +10,14 @@ module.exports = {
     },
     {
       method: "POST",
+      path: "/webhookPayPal",
+      handler: "stripe.webhookPayPal",
+      config: {
+        middlewares: [],
+      },
+    },
+    {
+      method: "POST",
       path: "/bank-payment/:id",
       handler: "stripe.bankPayment",
       config: {
