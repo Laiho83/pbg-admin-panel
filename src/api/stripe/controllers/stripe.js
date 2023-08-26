@@ -5,13 +5,11 @@
  */
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-
 const endpointSecret = process.env.STRIPE_END_POINT_SECRET;
 
 const stripe = require("stripe")(STRIPE_SECRET_KEY);
-
 const emailTemplates = require("./email.js");
-
+const paypal = require("./paypal.js");
 const unparsed = require("koa-body/unparsed.js");
 
 module.exports = {
@@ -56,9 +54,7 @@ module.exports = {
   },
 
   async webhookPayPal(ctx) {
-    const body = ctx.request.body[unparsed];
-
-    console.log("PayPal webhook called: ", ctx);
+    paypal.payPal(ctx);
   },
 
   setSubscriberRoleById: async (customerId, customer) => {
