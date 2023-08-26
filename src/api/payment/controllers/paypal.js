@@ -2,12 +2,10 @@ const http = require("http");
 const unparsed = require("koa-body/unparsed.js");
 var fetch = require("node-fetch");
 
-const CLIENT_ID =
-  "Acug2kLrBgqcB_lkM9yi-bj541Zlw3N_M70JGPF3LkKtU-lfId58x3OxJshh4Bbwj5YUoZqtwzBacbPy";
-const APP_SECRET =
-  "EGnJ9bO0-aZo9jSLjoIDVbAEwUJsXhN13EfL7bVMYXclzNI-M1Do5pzEETsrGpepLcKlcCneoqHLwz-c";
+const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+const APP_SECRET = process.env.PAYPAL_APP_SECRET;
 
-const webhook_id = "6AG86364BE709883P";
+const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID;
 
 const baseURL = {
   sandbox: "https://api-m.sandbox.paypal.com",
@@ -51,7 +49,7 @@ module.exports = {
             cert_url: ctx.request.header["paypal-cert-url"],
             auth_algo: ctx.request.header["paypal-auth-algo"],
             transmission_sig: ctx.request.header["paypal-transmission-sig"],
-            webhook_id: webhook_id,
+            webhook_id: PAYPAL_WEBHOOK_ID,
             webhook_event: ctx.request.body,
           }),
           headers: {
