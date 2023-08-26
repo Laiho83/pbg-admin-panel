@@ -82,14 +82,9 @@ module.exports = {
 
   customerStripeModel(checkoutSessionCompleted) {
     return {
-      providerActive: {
-        stripe: true,
-        paypal: false,
-      },
+      provider: "stripe",
       stripeCustomId: checkoutSessionCompleted.customer,
-      paypalCustomId: "/",
       stripeEmail: checkoutSessionCompleted.customer_details.email,
-      paypalEmail: "/",
       subscription: {
         type: {
           oneMonth: checkoutSessionCompleted.subscription,
@@ -104,17 +99,12 @@ module.exports = {
 
   customerPayPalModel(checkoutSessionCompleted) {
     return {
-      providerActive: {
-        stripe: true,
-        paypal: false,
-      },
-      stripeCustomId: checkoutSessionCompleted.customer,
+      provider: "paypal",
       paypalCustomId: "/",
-      stripeEmail: checkoutSessionCompleted.customer_details.email,
       paypalEmail: "/",
       subscription: {
         type: {
-          oneMonth: checkoutSessionCompleted.subscription,
+          oneMonth: true,
           sixMonth: false,
           twelveMonth: false,
         },
