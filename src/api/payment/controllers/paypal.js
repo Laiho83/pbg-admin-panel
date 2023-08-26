@@ -40,8 +40,6 @@ module.exports = {
   },
 
   async webhookSignature(ctx, auth) {
-    console.log(auth);
-
     try {
       let response = await fetch(
         `${baseURL.sandbox}/v1/notifications/verify-webhook-signature`,

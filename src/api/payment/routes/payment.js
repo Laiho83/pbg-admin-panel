@@ -2,16 +2,16 @@ module.exports = {
   routes: [
     {
       method: "POST",
-      path: "/webhook",
-      handler: "stripe.webhook",
+      path: "/webhook-stripe",
+      handler: "payment.webhookStripe",
       config: {
         middlewares: [],
       },
     },
     {
       method: "POST",
-      path: "/payPal",
-      handler: "stripe.webhookPayPal",
+      path: "/webhook-paypal",
+      handler: "payment.webhookPayPal",
       config: {
         middlewares: [],
       },
@@ -19,7 +19,7 @@ module.exports = {
     {
       method: "POST",
       path: "/bank-payment/:id",
-      handler: "stripe.bankPayment",
+      handler: "payment.bankPayment",
       config: {
         policies: ["global::hasPermissions"],
       },
