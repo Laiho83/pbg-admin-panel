@@ -1,10 +1,10 @@
-const http = require("http");
 const unparsed = require("koa-body/unparsed.js");
-var fetch = require("node-fetch");
+const fetch = require("node-fetch");
+
+const paymentService = require("../services/payment.service");
 
 const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 const APP_SECRET = process.env.PAYPAL_APP_SECRET;
-
 const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID;
 
 const baseURL = {
@@ -14,29 +14,69 @@ const baseURL = {
 
 module.exports = {
   async payPal(ctx) {
-    const body = JSON.parse(ctx.request.body[unparsed]);
-    const token = await module.exports.generateAccessToken();
+    try {
+      await paymentService.setPayPalSubscriberRoleByEmail(ctx.request.body);
+      return [200];
+    } catch (err) {
+      return [400, `Subscription Error: ${err}`];
+    }
 
-    await module.exports.webhookSignature(ctx, token);
-
-    ctx.response.status = 200;
+    return true;
   },
 
+  // Validate IPN message
+  async validate(body) {
+    const baseUrl = "https://ipnpb.paypal.com/cgi-bin/webscr";
+
+    let postreq = `cmd=_notify-validate&${body}`;
+
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Length": postreq.length,
+      },
+      body: postreq,
+    };
+
+    try {
+      let response = await fetch(baseUrl, options);
+
+      return response;
+    } catch (err) {
+      console.log(err);
+    }
+  },
+
+  async validateAPIRequest(ctx) {
+    const body = JSON.parse(ctx.request.body[unparsed]);
+    const token = await module.exports.generateAccessToken();
+    const verification_status = await module.exports.webhookSignature(
+      ctx,
+      token
+    );
+  },
+
+  // Validating With API request
   async generateAccessToken() {
     const auth = Buffer.from(CLIENT_ID + ":" + APP_SECRET).toString("base64");
 
-    const response = await fetch(`${baseURL.sandbox}/v1/oauth2/token`, {
-      method: "POST",
-      body: "grant_type=client_credentials",
-      headers: {
-        Authorization: `Basic ${auth}`,
-      },
-    });
+    try {
+      const response = await fetch(`${baseURL.sandbox}/v1/oauth2/token`, {
+        method: "POST",
+        body: "grant_type=client_credentials",
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      });
 
-    const data = await response.json();
-    return data.access_token;
+      const data = await response.json();
+      return data.access_token;
+    } catch (err) {
+      console.log(err);
+    }
   },
 
+  // Validating With API request
   async webhookSignature(ctx, auth) {
     try {
       let response = await fetch(
@@ -59,7 +99,7 @@ module.exports = {
         }
       );
       const data = await response.json();
-      console.log(data);
+      return data.verification_status;
     } catch (err) {
       console.log(err);
     }

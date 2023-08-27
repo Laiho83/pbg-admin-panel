@@ -22,10 +22,10 @@ module.exports = {
   async webhookPayPal(ctx) {
     const response = await paypal.payPal(ctx);
 
-    if (response) {
-      ctx.response.status = 200;
-    } else {
-      return ctx.badRequest(`Subscription Error: ${subs}`);
+    if (response[0] === 200) {
+      return (ctx.response.status = 200);
+    } else if (response[0] === 400) {
+      ctx.badRequest(response[1]);
     }
   },
 

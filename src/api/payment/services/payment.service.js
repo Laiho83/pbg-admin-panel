@@ -20,12 +20,12 @@ module.exports = {
     }
   },
 
-  setPayPalSubscriberRoleById: async (checkoutSessionCompleted) => {
+  setPayPalSubscriberRoleByEmail: async (checkoutSessionCompleted) => {
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
-          where: { id: checkoutSessionCompleted.client_reference_id },
+          where: { email: checkoutSessionCompleted.payer_email },
           data: {
             role: 3,
             payment: JSON.stringify(
@@ -100,16 +100,16 @@ module.exports = {
   customerPayPalModel(checkoutSessionCompleted) {
     return {
       provider: "paypal",
-      paypalCustomId: "/",
-      paypalEmail: "/",
+      paypalCustomId: checkoutSessionCompleted.recurring_payment_id,
+      paypalEmail: checkoutSessionCompleted.payer_email,
       subscription: {
         type: {
           oneMonth: true,
           sixMonth: false,
           twelveMonth: false,
         },
-        startDate: new Date(),
-        endDate: checkoutSessionCompleted.expires_at,
+        startDate: checkoutSessionCompleted.time_created,
+        endDate: checkoutSessionCompleted.next_payment_date,
       },
     };
   },
