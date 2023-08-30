@@ -2,6 +2,10 @@ const PAYPAL_PLAN_MONTHLY = process.env.PAYPAL_PLAN_MONTHLY;
 const PAYPAL_PLAN_SIXMONTH = process.env.PAYPAL_PLAN_SIXMONTH;
 const PAYPAL_PLAN_TWELVEMONTH = process.env.PAYPAL_PLAN_TWELVEMONTH;
 
+const STRIPE_PLAN_MONTHLY = process.env.STRIPE_PLAN_MONTHLY;
+const STRIPE_PLAN_SIXMONTH = process.env.STRIPE_PLAN_SIXMONTH;
+const STRIPE_PLAN_TWELVEMONTH = process.env.STRIPE_PLAN_TWELVEMONTH;
+
 module.exports = {
   setStripeSubscriberRoleById: async (checkoutSessionCompleted) => {
     try {
@@ -90,10 +94,14 @@ module.exports = {
       stripeCustomId: checkoutSessionCompleted.customer,
       stripeEmail: checkoutSessionCompleted.customer_details.email,
       subscription: {
+        id: checkoutSessionCompleted.subscription,
         type: {
-          oneMonth: checkoutSessionCompleted.subscription,
-          sixMonth: false,
-          twelveMonth: false,
+          oneMonth:
+            checkoutSessionCompleted.amount_total == STRIPE_PLAN_MONTHLY,
+          sixMonth:
+            checkoutSessionCompleted.amount_total == STRIPE_PLAN_SIXMONTH,
+          twelveMonth:
+            checkoutSessionCompleted.amount_total == STRIPE_PLAN_TWELVEMONTH,
         },
         startDate: new Date(),
         endDate: checkoutSessionCompleted.expires_at,
@@ -102,9 +110,7 @@ module.exports = {
   },
 
   customerPayPalModel(checkoutSessionCompleted) {
-    console.log(PAYPAL_PLAN_TWELVEMONTH);
-    console.log(checkoutSessionCompleted.plan_id);
-
+    console.log(checkoutSessionCompleted);
     return {
       provider: "paypal",
       paypalCustomId: checkoutSessionCompleted.id,
