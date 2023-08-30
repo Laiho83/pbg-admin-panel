@@ -1,3 +1,7 @@
+const PAYPAL_PLAN_MONTHLY = process.env.PAYPAL_PLAN_MONTHLY;
+const PAYPAL_PLAN_SIXMONTH = process.env.PAYPAL_PLAN_SIXMONTH;
+const PAYPAL_PLAN_TWELVEMONTH = process.env.PAYPAL_PLAN_TWELVEMONTH;
+
 module.exports = {
   setStripeSubscriberRoleById: async (checkoutSessionCompleted) => {
     try {
@@ -20,12 +24,12 @@ module.exports = {
     }
   },
 
-  setPayPalSubscriberRoleByEmail: async (checkoutSessionCompleted) => {
+  setPayPalSubscriberRoleById: async (checkoutSessionCompleted) => {
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
-          where: { email: checkoutSessionCompleted.payer_email },
+          where: { id: checkoutSessionCompleted.custom_id },
           data: {
             role: 3,
             payment: JSON.stringify(
@@ -98,18 +102,21 @@ module.exports = {
   },
 
   customerPayPalModel(checkoutSessionCompleted) {
+    console.log(PAYPAL_PLAN_TWELVEMONTH);
+    console.log(checkoutSessionCompleted.plan_id);
+
     return {
       provider: "paypal",
-      paypalCustomId: checkoutSessionCompleted.recurring_payment_id,
-      paypalEmail: checkoutSessionCompleted.payer_email,
+      paypalCustomId: checkoutSessionCompleted.id,
       subscription: {
         type: {
-          oneMonth: true,
-          sixMonth: false,
-          twelveMonth: false,
+          oneMonth: checkoutSessionCompleted.plan_id === PAYPAL_PLAN_MONTHLY,
+          sixMonth: checkoutSessionCompleted.plan_id === PAYPAL_PLAN_SIXMONTH,
+          twelveMonth:
+            checkoutSessionCompleted.plan_id === PAYPAL_PLAN_TWELVEMONTH,
         },
-        startDate: checkoutSessionCompleted.time_created,
-        endDate: checkoutSessionCompleted.next_payment_date,
+        startDate: checkoutSessionCompleted.update_time,
+        endDate: checkoutSessionCompleted.billing_info.next_billing_time,
       },
     };
   },

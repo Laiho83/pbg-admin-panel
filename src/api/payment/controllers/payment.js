@@ -20,10 +20,10 @@ module.exports = {
   },
 
   async webhookPayPal(ctx) {
-    const response = await paypal.payPal(ctx);
+    const response = await paypal.webhookPayPal(ctx);
 
     if (response[0] === 200) {
-      return (ctx.response.status = 200);
+      ctx.response.status = 200;
     } else if (response[0] === 400) {
       ctx.badRequest(response[1]);
     }

@@ -13,9 +13,9 @@ const baseURL = {
 };
 
 module.exports = {
-  async payPal(ctx) {
+  async subscription(ctx) {
     try {
-      await paymentService.setPayPalSubscriberRoleByEmail(ctx.request.body);
+      // await paymentService.setPayPalSubscriberRoleByEmail(ctx.request.body);
       return [200];
     } catch (err) {
       return [400, `Subscription Error: ${err}`];
@@ -24,39 +24,25 @@ module.exports = {
     return true;
   },
 
-  // Validate IPN message
-  async validate(body) {
-    const baseUrl = "https://ipnpb.paypal.com/cgi-bin/webscr";
-
-    let postreq = `cmd=_notify-validate&${body}`;
-
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Length": postreq.length,
-      },
-      body: postreq,
-    };
-
-    try {
-      let response = await fetch(baseUrl, options);
-
-      return response;
-    } catch (err) {
-      console.log(err);
-    }
-  },
-
-  async validateAPIRequest(ctx) {
-    const body = JSON.parse(ctx.request.body[unparsed]);
+  async webhookPayPal(ctx) {
+    const body = ctx.request.body;
     const token = await module.exports.generateAccessToken();
     const verification_status = await module.exports.webhookSignature(
       ctx,
       token
     );
+
+    if (verification_status === "SUCCESS") {
+      if (body.event_type === "BILLING.SUBSCRIPTION.ACTIVATED") {
+        paymentService.setPayPalSubscriberRoleById(body.resource);
+        return [200];
+      }
+    }
+
+    return [400, `Subscription Error`];
   },
 
-  // Validating With API request
+  // Generate access token
   async generateAccessToken() {
     const auth = Buffer.from(CLIENT_ID + ":" + APP_SECRET).toString("base64");
 
@@ -76,7 +62,7 @@ module.exports = {
     }
   },
 
-  // Validating With API request
+  // Validating with API request - PayPal webhook
   async webhookSignature(ctx, auth) {
     try {
       let response = await fetch(
@@ -100,6 +86,29 @@ module.exports = {
       );
       const data = await response.json();
       return data.verification_status;
+    } catch (err) {
+      console.log(err);
+    }
+  },
+
+  // Validate IPN message
+  async validate(body) {
+    const baseUrl = "https://ipnpb.paypal.com/cgi-bin/webscr";
+
+    let postreq = `cmd=_notify-validate&${body}`;
+
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Length": postreq.length,
+      },
+      body: postreq,
+    };
+
+    try {
+      let response = await fetch(baseUrl, options);
+
+      return response;
     } catch (err) {
       console.log(err);
     }
