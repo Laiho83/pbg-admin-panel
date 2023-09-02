@@ -24,5 +24,13 @@ module.exports = {
         policies: ["global::hasPermissions"],
       },
     },
+    {
+      method: "POST",
+      path: "/cancel-subscription-stripe/:id",
+      handler: "payment.cancelSubscriptionStripe",
+      config: {
+        policies: ["global::hasPermissions"],
+      },
+    },
   ],
 };

@@ -15,9 +15,29 @@ module.exports = {
           where: { id: checkoutSessionCompleted.client_reference_id },
           data: {
             role: 3,
+            stripeCustomerId: checkoutSessionCompleted.customer,
             payment: JSON.stringify(
               module.exports.customerStripeModel(checkoutSessionCompleted)
             ),
+          },
+        })
+        .then(() => {
+          return true;
+        });
+    } catch (err) {
+      return err;
+    }
+  },
+
+  updateStripeSubscriberRoleByCustomerId: async (id, role, data) => {
+    try {
+      await strapi
+        .query("plugin::users-permissions.user")
+        .update({
+          where: { stripeCustomerId: id },
+          data: {
+            role: role,
+            payment: JSON.stringify(data),
           },
         })
         .then(() => {
@@ -82,6 +102,26 @@ module.exports = {
     }
   },
 
+  getUserData: async (id) => {
+    try {
+      return await strapi.query("plugin::users-permissions.user").findOne({
+        where: { id: id },
+      });
+    } catch (err) {
+      return err;
+    }
+  },
+
+  getUserDataByStripeCustomerId: async (stripeCustomerId) => {
+    try {
+      return await strapi.query("plugin::users-permissions.user").findOne({
+        where: { stripeCustomerId: stripeCustomerId },
+      });
+    } catch (err) {
+      return err;
+    }
+  },
+
   createSubscription: async (ctx) => {
     console.log(ctx.state.user.stripeCustomerId);
 
@@ -91,7 +131,7 @@ module.exports = {
   customerStripeModel(checkoutSessionCompleted) {
     return {
       provider: "stripe",
-      stripeCustomId: checkoutSessionCompleted.customer,
+      stripeCustomerId: checkoutSessionCompleted.customer,
       stripeEmail: checkoutSessionCompleted.customer_details.email,
       subscription: {
         id: checkoutSessionCompleted.subscription,
@@ -104,13 +144,14 @@ module.exports = {
             checkoutSessionCompleted.amount_total == STRIPE_PLAN_TWELVEMONTH,
         },
         startDate: new Date(),
-        endDate: checkoutSessionCompleted.expires_at,
+        renewalDate: checkoutSessionCompleted.expires_at,
+        cancelData: "",
+        active: true,
       },
     };
   },
 
   customerPayPalModel(checkoutSessionCompleted) {
-    console.log(checkoutSessionCompleted);
     return {
       provider: "paypal",
       paypalCustomId: checkoutSessionCompleted.id,
