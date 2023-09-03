@@ -7,6 +7,7 @@
 const paypal = require("./paypal.js");
 const stripe = require("./stripe.js");
 const bankPayment = require("./bank-payment/bank-payment.js");
+const paymentService = require("../services/payment.service.js");
 
 module.exports = {
   async webhookStripe(ctx) {

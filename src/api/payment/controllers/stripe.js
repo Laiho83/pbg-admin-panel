@@ -50,6 +50,7 @@ module.exports = {
     return [200];
   },
 
+  // This one is envoked when subscription is canceled and the cancel date is set. Does not delete/remove subscription
   async cancelSubscriptionStripe(ctx) {
     const email = ctx.state.user.email;
     const id = ctx.params.id;
@@ -94,6 +95,7 @@ module.exports = {
 
       data.payment.subscription = {
         active: false,
+        cancelDate: new Date(),
       };
 
       paymentService.updateStripeSubscriberRoleByCustomerId(
