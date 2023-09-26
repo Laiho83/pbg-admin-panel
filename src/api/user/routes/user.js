@@ -8,5 +8,13 @@ module.exports = {
         policies: ["global::hasPermissions"],
       },
     },
+    {
+      method: "POST",
+      path: "/user-welcome-email/:id",
+      handler: "user.welcomeEmail",
+      config: {
+        policies: ["global::hasPermissions"],
+      },
+    },
   ],
 };

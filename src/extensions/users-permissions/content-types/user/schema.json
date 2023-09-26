@@ -9,8 +9,7 @@
     "displayName": "User"
   },
   "options": {
-    "draftAndPublish": false,
-    "timestamps": true
+    "draftAndPublish": false
   },
   "attributes": {
     "username": {
@@ -79,6 +78,11 @@
       "type": "string",
       "unique": true,
       "private": true
+    },
+    "confirmationCompleted": {
+      "type": "boolean",
+      "default": false,
+      "required": true
     }
   }
 }

@@ -37,6 +37,7 @@ module.exports = {
           return [400, `Subscription Error: ${err}`];
         }
       case "customer.subscription.updated":
+        module.exports.stripeUpdateSubscription(event.data.object);
         break;
 
       case "customer.subscription.deleted":
@@ -85,6 +86,26 @@ module.exports = {
     return [400, `Subscription Cancelation Error:`];
   },
 
+  async stripeUpdateSubscription(event) {
+    const customerId = event.customer;
+
+    try {
+      await strapi.plugins["email"].services.email.sendTemplatedEmail(
+        {
+          to: "pbgww.dev@gmail.com",
+        },
+        emailTemplates.bankEmailTemplate(),
+        {
+          user: [],
+        }
+      );
+      return true;
+    } catch (err) {
+      return false;
+    }
+  },
+
+  // This one deletes subscription
   async stripeDeleteSubscription(event) {
     const customerId = event.customer;
 
