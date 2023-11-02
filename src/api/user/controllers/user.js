@@ -28,6 +28,25 @@ module.exports = {
     }
   },
 
+  async passwordRenewel(ctx) {
+    const email = ctx.request.query.email;
+
+    try {
+      const entry = await strapi.db
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { email: email } });
+
+      const passwordRenewel = entry.passwordRenewel;
+      ctx.response.status = 200;
+      ctx.response.body = JSON.stringify({ passwordRenewel: passwordRenewel });
+    } catch (err) {
+      ctx.response.status = 400;
+      ctx.response.body = JSON.stringify({
+        message: "Email update error: " + err,
+      });
+    }
+  },
+
   async welcomeEmail(ctx) {
     const id = ctx.params.id;
     const email = ctx.state.user.email;

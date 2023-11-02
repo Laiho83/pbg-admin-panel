@@ -16,5 +16,10 @@ module.exports = {
         policies: ["global::hasPermissions"],
       },
     },
+    {
+      method: "GET",
+      path: "/user-password-renewel",
+      handler: "user.passwordRenewel",
+    },
   ],
 };
