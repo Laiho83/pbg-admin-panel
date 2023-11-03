@@ -47,6 +47,28 @@ module.exports = {
     }
   },
 
+  async passwordRenewelUpdate(ctx) {
+    const id = ctx.params.id;
+
+    try {
+      await strapi.query("plugin::users-permissions.user").update({
+        where: { id: id },
+        data: {
+          passwordRenewel: true,
+        },
+      });
+      ctx.response.status = 200;
+      ctx.response.body = JSON.stringify({
+        message: "Password Renewel updated successfully ",
+      });
+    } catch (err) {
+      ctx.response.status = 400;
+      ctx.response.body = JSON.stringify({
+        message: "Email update error: " + err,
+      });
+    }
+  },
+
   async welcomeEmail(ctx) {
     const id = ctx.params.id;
     const email = ctx.state.user.email;

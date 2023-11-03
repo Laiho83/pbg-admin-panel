@@ -21,5 +21,10 @@ module.exports = {
       path: "/user-password-renewel",
       handler: "user.passwordRenewel",
     },
+    {
+      method: "POST",
+      path: "/user-password-renewel/:id",
+      handler: "user.passwordRenewelUpdate",
+    },
   ],
 };
