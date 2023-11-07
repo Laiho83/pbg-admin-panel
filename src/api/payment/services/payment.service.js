@@ -102,13 +102,8 @@ module.exports = {
     }
   },
 
-  createSubscription: async (ctx) => {
-    console.log(ctx.state.user.stripeCustomerId);
-
-    ctx.response.status = 200;
-  },
-
   customerStripeModel(checkoutSessionCompleted) {
+    console.log(checkoutSessionCompleted);
     return {
       provider: "stripe",
       stripeCustomerId: checkoutSessionCompleted.customer,
@@ -123,7 +118,6 @@ module.exports = {
           twelveMonth:
             checkoutSessionCompleted.amount_total == STRIPE_PLAN_TWELVEMONTH,
         },
-        startDate: new Date(),
         renewalDate: checkoutSessionCompleted.expires_at,
         cancelData: "",
         active: true,

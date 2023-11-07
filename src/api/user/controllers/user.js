@@ -69,6 +69,33 @@ module.exports = {
     }
   },
 
+  async isUser(ctx) {
+    const email = ctx.request.query.email;
+
+    try {
+      const entry = await strapi.db
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { email: email } });
+
+      if (!entry) {
+        ctx.response.status = 400;
+        ctx.response.body = JSON.stringify({
+          message: "User does not exist",
+        });
+
+        return;
+      }
+      ctx.response.status = 200;
+      ctx.response.body = JSON.stringify({ user: true });
+      return;
+    } catch (err) {
+      ctx.response.status = 403;
+      ctx.response.body = JSON.stringify({
+        message: "User does not exist",
+      });
+    }
+  },
+
   async welcomeEmail(ctx) {
     const id = ctx.params.id;
     const email = ctx.state.user.email;

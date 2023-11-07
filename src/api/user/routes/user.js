@@ -18,6 +18,11 @@ module.exports = {
     },
     {
       method: "GET",
+      path: "/is-user",
+      handler: "user.isUser",
+    },
+    {
+      method: "GET",
       path: "/user-password-renewel",
       handler: "user.passwordRenewel",
     },

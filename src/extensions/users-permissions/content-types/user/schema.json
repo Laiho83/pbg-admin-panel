@@ -88,6 +88,12 @@
       "type": "boolean",
       "default": false,
       "required": true
+    },
+    "paypalCustomId": {
+      "type": "string"
+    },
+    "orderId": {
+      "type": "string"
     }
   }
 }
