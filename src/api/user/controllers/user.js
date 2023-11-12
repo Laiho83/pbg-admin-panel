@@ -151,6 +151,7 @@ module.exports = {
           where: { id: id },
           data: {
             confirmationCompleted: true,
+            passwordRenewel: true,
           },
         })
         .then(() => {
