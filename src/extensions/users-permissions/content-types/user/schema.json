@@ -72,7 +72,8 @@
       "type": "json"
     },
     "payment": {
-      "type": "json"
+      "type": "json",
+      "private": true
     },
     "stripeCustomerId": {
       "type": "string",
@@ -90,7 +91,9 @@
       "required": true
     },
     "paypalCustomId": {
-      "type": "string"
+      "type": "string",
+      "private": true,
+      "unique": true
     },
     "orderId": {
       "type": "string"

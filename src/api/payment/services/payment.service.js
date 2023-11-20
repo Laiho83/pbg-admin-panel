@@ -2,19 +2,18 @@ const PAYPAL_PLAN_MONTHLY = process.env.PAYPAL_PLAN_MONTHLY;
 const PAYPAL_PLAN_SIXMONTH = process.env.PAYPAL_PLAN_SIXMONTH;
 const PAYPAL_PLAN_TWELVEMONTH = process.env.PAYPAL_PLAN_TWELVEMONTH;
 
-const STRIPE_PLAN_MONTHLY = process.env.STRIPE_PLAN_MONTHLY;
-const STRIPE_PLAN_SIXMONTH = process.env.STRIPE_PLAN_SIXMONTH;
-const STRIPE_PLAN_TWELVEMONTH = process.env.STRIPE_PLAN_TWELVEMONTH;
-
 module.exports = {
-  setStripeSubscriberRoleById: async (checkoutSessionCompleted) => {
+  /**
+   * Save the data to DB for Stripe
+   */
+  setStripeSubscriberRoleById: async (checkoutSessionCompleted, role) => {
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
           where: { id: checkoutSessionCompleted.client_reference_id },
           data: {
-            role: 3,
+            role,
             stripeCustomerId: checkoutSessionCompleted.customer,
             payment: JSON.stringify(
               module.exports.customerStripeModel(checkoutSessionCompleted)
@@ -29,14 +28,14 @@ module.exports = {
     }
   },
 
-  updateStripeSubscriberRoleByCustomerId: async (id, role, data) => {
+  setStripeSubscriberRoleByCustomerId: async (id, role, data) => {
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
           where: { stripeCustomerId: id },
+          role,
           data: {
-            role: role,
             payment: JSON.stringify(data),
           },
         })
@@ -48,6 +47,9 @@ module.exports = {
     }
   },
 
+  /**
+   * Save the data to DB for PayPal
+   */
   setPayPalSubscriberRoleById: async (checkoutSessionCompleted) => {
     try {
       await strapi
@@ -69,78 +71,88 @@ module.exports = {
     }
   },
 
-  setSubscriberRoleByEmail: async (email, customer) => {
-    try {
-      await strapi
-        .query("plugin::users-permissions.user")
-        .update({
-          where: { email: email },
-          data: { role: 3, stripeCustomerId: customer },
-        })
-        .then(() => {
-          return true;
-        });
-    } catch (err) {
-      return err;
-    }
-  },
-
-  setSubscriberRole: async (ctx) => {
-    try {
-      await strapi
-        .query("plugin::users-permissions.user")
-        .update({
-          where: { id: ctx.state.user.id },
-          data: { role: 3 },
-        })
-        .then((res) => {
-          ctx.response.status = 200;
-        });
-      ctx.body = entry;
-    } catch (err) {
-      ctx.body = err;
-    }
-  },
-
+  /**
+   * Stripe models to save
+   */
   customerStripeModel(checkoutSessionCompleted) {
-    console.log(checkoutSessionCompleted);
+    const createdDate = new Date(checkoutSessionCompleted.created * 1000);
+    const endDateTemplate = new Date(checkoutSessionCompleted.created * 1000);
+    const monthlySubscription = parseInt(
+      (checkoutSessionCompleted.amount_total / 10000) * 12
+    );
+
     return {
       provider: "stripe",
       stripeCustomerId: checkoutSessionCompleted.customer,
       stripeEmail: checkoutSessionCompleted.customer_details.email,
       subscription: {
         id: checkoutSessionCompleted.subscription,
-        type: {
-          oneMonth:
-            checkoutSessionCompleted.amount_total == STRIPE_PLAN_MONTHLY,
-          sixMonth:
-            checkoutSessionCompleted.amount_total == STRIPE_PLAN_SIXMONTH,
-          twelveMonth:
-            checkoutSessionCompleted.amount_total == STRIPE_PLAN_TWELVEMONTH,
-        },
-        renewalDate: checkoutSessionCompleted.expires_at,
+        invoice: checkoutSessionCompleted.invoice,
+        type: monthlySubscription,
+        startDate: createdDate,
+        renewalDate: new Date(
+          endDateTemplate.setMonth(
+            endDateTemplate.getMonth() + monthlySubscription
+          )
+        ),
         cancelData: "",
-        active: true,
+        status: "active",
       },
     };
   },
 
+  async customerStripeUpdate(dataFromStripe, customerPaymentData) {
+    const payment = customerPaymentData.payment;
+    payment.subscription.invoice = dataFromStripe.latest_invoice;
+    payment.subscription.status = dataFromStripe.status;
+    payment.subscription.renewalDate = new Date(
+      dataFromStripe.current_period_end * 1000
+    );
+
+    await module.exports.setStripeSubscriberRoleByCustomerId(
+      customerPaymentData.stripeCustomerId,
+      module.exports.getRole(dataFromStripe.status),
+      payment
+    );
+  },
+
+  getRole(status) {
+    return status === "active" ? 3 : 1;
+  },
+
+  /**
+   * Paypal models
+   */
   customerPayPalModel(checkoutSessionCompleted) {
     return {
       provider: "paypal",
       paypalCustomId: checkoutSessionCompleted.id,
       subscription: {
-        type: {
-          oneMonth: checkoutSessionCompleted.plan_id === PAYPAL_PLAN_MONTHLY,
-          sixMonth: checkoutSessionCompleted.plan_id === PAYPAL_PLAN_SIXMONTH,
-          twelveMonth:
-            checkoutSessionCompleted.plan_id === PAYPAL_PLAN_TWELVEMONTH,
-        },
+        type: module.exports.customerPayPalModel(
+          checkoutSessionCompleted.plan_id
+        ),
         startDate: checkoutSessionCompleted.update_time,
         endDate: checkoutSessionCompleted.billing_info.next_billing_time,
       },
     };
   },
+
+  getPayPalType(type) {
+    switch (type) {
+      case PAYPAL_PLAN_MONTHLY:
+        return 1;
+      case PAYPAL_PLAN_SIXMONTH:
+        return 6;
+      case PAYPAL_PLAN_TWELVEMONTH:
+        return 12;
+      default:
+        return 1;
+    }
+  },
+
+  /**
+   * Get data from DB
+   */
   getUserData: async (id) => {
     try {
       return await strapi.query("plugin::users-permissions.user").findOne({
@@ -153,9 +165,13 @@ module.exports = {
 
   getUserDataByStripeCustomerId: async (stripeCustomerId) => {
     try {
-      return await strapi.query("plugin::users-permissions.user").findOne({
-        where: { stripeCustomerId: stripeCustomerId },
-      });
+      const customer = await strapi
+        .query("plugin::users-permissions.user")
+        .findOne({
+          where: { stripeCustomerId: stripeCustomerId },
+        });
+
+      return customer;
     } catch (err) {
       return err;
     }

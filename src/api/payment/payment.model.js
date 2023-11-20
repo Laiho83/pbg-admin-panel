@@ -18,16 +18,12 @@ const stripePaymentModel = {
   stripeEmail: checkoutSessionCompleted.customer_details.email,
   subscription: {
     id: checkoutSessionCompleted.subscription,
-    type: {
-      oneMonth: checkoutSessionCompleted.amount_total == STRIPE_PLAN_MONTHLY,
-      sixMonth: checkoutSessionCompleted.amount_total == STRIPE_PLAN_SIXMONTH,
-      twelveMonth:
-        checkoutSessionCompleted.amount_total == STRIPE_PLAN_TWELVEMONTH,
-    },
+    invoice: checkoutSessionCompleted.invoice,
+    type: parseInt((checkoutSessionCompleted.amount_total / 10000) * 12),
     startDate: new Date(),
-    renewalDate: checkoutSessionCompleted.expires_at,
+    renewalDate: new Date(checkoutSessionCompleted.expires_at * 1000),
     cancelData: "",
-    active: true,
+    status: "active",
   },
 };
 

@@ -25,20 +25,21 @@ module.exports = {
 
     // Handle the event
     switch (event.type) {
-      case "checkout.session.completed":
-        const checkoutSessionCompleted = event.data.object;
+      case "customer.subscription.updated":
+        module.exports.stripeUpdateSubscription(event.data.object);
+        // console.log("Checkout updated:");
+        // console.log(event.data.object);
+        break;
 
+      case "checkout.session.completed":
         try {
-          await paymentService.setStripeSubscriberRoleById(
-            checkoutSessionCompleted
-          );
+          module.exports.stripeCheckoutCompleted(event.data.object);
+          // console.log("Checkout completed:");
+          // console.log(event.data.object);
           return [200];
         } catch (err) {
           return [400, `Subscription Error: ${err}`];
         }
-      case "customer.subscription.updated":
-        module.exports.stripeUpdateSubscription(event.data.object);
-        break;
 
       case "customer.subscription.deleted":
         module.exports.stripeDeleteSubscription(event.data.object);
@@ -71,7 +72,7 @@ module.exports = {
 
         userData.payment.subscription.cancelData = new Date();
 
-        paymentService.updateStripeSubscriberRoleByCustomerId(
+        paymentService.setStripeSubscriberRoleByCustomerId(
           userStripeCustomerId,
           3,
           userData.payment
@@ -86,20 +87,37 @@ module.exports = {
     return [400, `Subscription Cancelation Error:`];
   },
 
+  async stripeCheckoutCompleted(event) {
+    await paymentService.setStripeSubscriberRoleById(event, 3);
+  },
+
   async stripeUpdateSubscription(event) {
     const customerId = event.customer;
 
+    const customerPaymentData =
+      await paymentService.getUserDataByStripeCustomerId(customerId);
+
+    console.log(customerId);
+
+    // On first payment we don't have pamynet data saved so there is nothing to update
+    // we have to let the code to go to checkout.completed event
+    if (!customerPaymentData) {
+      return;
+    }
+
+    paymentService.customerStripeUpdate(event, customerPaymentData);
+
     try {
-      await strapi.plugins["email"].services.email.sendTemplatedEmail(
-        {
-          to: "pbgww.dev@gmail.com",
-        },
-        emailTemplates.bankEmailTemplate(),
-        {
-          user: [],
-        }
-      );
-      return true;
+      // await strapi.plugins["email"].services.email.sendTemplatedEmail(
+      //   {
+      //     to: "pbgww.dev@gmail.com",
+      //   },
+      //   emailTemplates.bankEmailTemplate(),
+      //   {
+      //     user: [],
+      //   }
+      // );
+      // return true;
     } catch (err) {
       return false;
     }
@@ -119,7 +137,7 @@ module.exports = {
         cancelDate: new Date(),
       };
 
-      paymentService.updateStripeSubscriberRoleByCustomerId(
+      paymentService.setStripeSubscriberRoleByCustomerId(
         customerId,
         1,
         data.payment
