@@ -66,13 +66,21 @@ module.exports = {
    * setStripePaymentOnUpdate methos hecks if customer payment data exist in DB if not returns nul.
    * In the above case, It's usually first subscription case and we have to continue to stripeCheckoutCompleted (handled in function that envokes this one)
    */
-  async stripeUpdateSubscription(event) {
-    try {
-      const update = await paymentService.setStripePaymentOnUpdate(event);
+  async stripeUpdateSubscription(stripeObj) {
+    const customerId = stripeObj.customer;
 
-      if (!update) {
+    try {
+      const customerPaymentData =
+        await paymentService.getUserDataByStripeCustomerId(customerId);
+
+      if (!customerPaymentData) {
         return;
       }
+
+      await paymentService.setStripePaymentOnUpdate(
+        stripeObj,
+        customerPaymentData
+      );
     } catch (err) {
       return false;
     }
@@ -84,7 +92,5 @@ module.exports = {
    */
   async stripeDeleteSubscription(event) {
     const customerId = event.customer;
-
-    console.log("DELETED");
   },
 };

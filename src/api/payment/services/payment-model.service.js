@@ -31,9 +31,14 @@ module.exports = {
     };
   },
 
-  async customerStripeUpdate(dataFromStripe, customerPaymentData) {
+  customerStripeUpdate(dataFromStripe, customerPaymentData) {
     const payment = customerPaymentData.payment;
+    const monthlySubscription = dataFromStripe.plan.amount
+      ? parseInt((dataFromStripe.plan.amount / 10000) * 12)
+      : customerPaymentData.subscription.type;
 
+    payment.subscription.id = dataFromStripe.id;
+    payment.subscription.type = monthlySubscription;
     payment.subscription.invoice = dataFromStripe.latest_invoice;
     payment.subscription.status = dataFromStripe.status;
     payment.subscription.renewalDate = new Date(

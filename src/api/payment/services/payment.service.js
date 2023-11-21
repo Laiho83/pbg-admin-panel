@@ -40,24 +40,23 @@ module.exports = {
    * Checks if customer payment data exist in DB if not returns nul.
    * In the above case, It's usually first subscription case and we have to continue to setStripePaymentOnFirstSubscriptionCreated (handled in function that envokes this one)
    */
-  setStripePaymentOnUpdate: async (data) => {
+  setStripePaymentOnUpdate: async (data, customerPaymentData) => {
     const customerId = data.customer;
-    const customerPaymentData =
-      await module.exports.getUserDataByStripeCustomerId(customerId);
 
-    if (!customerPaymentData) {
-      return null;
-    }
+    const paymentModel = paymentModelService.customerStripeUpdate(
+      data,
+      customerPaymentData
+    );
 
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
-          where: { stripeCustomerId: id },
-          role: paymentModelService.getRole(customerPaymentData.status),
-          payment: JSON.stringify(
-            paymentModelService.customerStripeUpdate(data, customerPaymentData)
-          ),
+          where: { stripeCustomerId: customerId },
+          data: {
+            role: paymentModelService.getRole(data.status),
+            payment: JSON.stringify(paymentModel),
+          },
         })
         .then(() => {
           return true;
