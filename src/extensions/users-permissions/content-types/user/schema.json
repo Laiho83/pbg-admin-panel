@@ -97,6 +97,9 @@
     },
     "orderId": {
       "type": "string"
+    },
+    "currentPeriodEnd": {
+      "type": "string"
     }
   }
 }

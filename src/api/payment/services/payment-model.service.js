@@ -3,6 +3,7 @@ module.exports = {
    * Stripe models to save
    * monthlySubscription: calculated from price
    *    - number of month (1-1month, 6-6month, 12-12month)
+   * endDate: 'When cancelled' or cancelation date
    */
   customerStripeModel(checkoutSessionCompleted) {
     const createdDate = new Date(checkoutSessionCompleted.created * 1000);
@@ -20,12 +21,13 @@ module.exports = {
         invoice: checkoutSessionCompleted.invoice,
         type: monthlySubscription,
         startDate: createdDate,
-        renewalDate: new Date(
+        currentPeriodStart: createdDate,
+        currentPeriodEnd: new Date(
           endDateTemplate.setMonth(
             endDateTemplate.getMonth() + monthlySubscription
           )
         ),
-        cancelData: "",
+        endDate: "When cancelled",
         status: "active",
       },
     };
@@ -41,9 +43,24 @@ module.exports = {
     payment.subscription.type = monthlySubscription;
     payment.subscription.invoice = dataFromStripe.latest_invoice;
     payment.subscription.status = dataFromStripe.status;
-    payment.subscription.renewalDate = new Date(
+    payment.subscription.currentPeriodStart = new Date(
+      dataFromStripe.current_period_start * 1000
+    );
+    payment.subscription.currentPeriodEnd = new Date(
       dataFromStripe.current_period_end * 1000
     );
+
+    return payment;
+  },
+
+  customerStripeDelete(dataFromStripe, customerPaymentData) {
+    const payment = customerPaymentData.payment;
+    const endDate = dataFromStripe.cancel_at
+      ? new Date(dataFromStripe.cancel_at * 1000)
+      : new Date(dataFromStripe.canceled_at * 1000);
+
+    payment.subscription.id = dataFromStripe.id;
+    payment.subscription.endDate = endDate;
 
     return payment;
   },

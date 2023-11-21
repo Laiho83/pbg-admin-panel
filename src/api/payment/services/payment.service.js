@@ -4,6 +4,8 @@ const PAYPAL_PLAN_MONTHLY = process.env.PAYPAL_PLAN_MONTHLY;
 const PAYPAL_PLAN_SIXMONTH = process.env.PAYPAL_PLAN_SIXMONTH;
 const PAYPAL_PLAN_TWELVEMONTH = process.env.PAYPAL_PLAN_TWELVEMONTH;
 
+let orderId = 8492;
+
 module.exports = {
   /**
    * Sets Stripe payment field and stripeCustomerId on first subscription, when field is empty
@@ -13,6 +15,10 @@ module.exports = {
     checkoutSessionCompleted
   ) => {
     const role = 3;
+    const paymentModel = paymentModelService.customerStripeModel(
+      checkoutSessionCompleted
+    );
+
     try {
       await strapi
         .query("plugin::users-permissions.user")
@@ -20,10 +26,10 @@ module.exports = {
           where: { id: checkoutSessionCompleted.client_reference_id },
           data: {
             role,
+            orderId: `#${orderId++}`,
             stripeCustomerId: checkoutSessionCompleted.customer,
-            payment: JSON.stringify(
-              paymentModelService.customerStripeModel(checkoutSessionCompleted)
-            ),
+            currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
+            payment: JSON.stringify(paymentModel),
           },
         })
         .then(() => {
@@ -55,6 +61,41 @@ module.exports = {
           where: { stripeCustomerId: customerId },
           data: {
             role: paymentModelService.getRole(data.status),
+            orderId: `#${orderId++}`,
+            currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
+            payment: JSON.stringify(paymentModel),
+          },
+        })
+        .then(() => {
+          return true;
+        });
+    } catch (err) {
+      return err;
+    }
+  },
+
+  /**
+   * Sets Stripe payment field and role on update (renewel, delete, ...)
+   * Role: 3 - subscriber, 1 - Authenticated
+   * Checks if customer payment data exist in DB if not returns nul.
+   * In the above case, It's usually first subscription case and we have to continue to setStripePaymentOnFirstSubscriptionCreated (handled in function that envokes this one)
+   */
+  setStripePaymentOnDelete: async (data, customerPaymentData) => {
+    const customerId = data.customer;
+
+    const paymentModel = paymentModelService.customerStripeDelete(
+      data,
+      customerPaymentData
+    );
+
+    try {
+      await strapi
+        .query("plugin::users-permissions.user")
+        .update({
+          where: { stripeCustomerId: customerId },
+          data: {
+            role: 1,
+            currentPeriodEnd: paymentModel.subscription.endDate,
             payment: JSON.stringify(paymentModel),
           },
         })
@@ -88,6 +129,10 @@ module.exports = {
     } catch (err) {
       return err;
     }
+  },
+
+  setOrderId: (customerId) => {
+    return `#${customerId}00`;
   },
 
   /**

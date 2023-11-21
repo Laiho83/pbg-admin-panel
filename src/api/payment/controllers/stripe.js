@@ -90,7 +90,23 @@ module.exports = {
    * Deleted subscription
    * Role: 3 - subscriber, 1 - Authenticated
    */
-  async stripeDeleteSubscription(event) {
-    const customerId = event.customer;
+  async stripeDeleteSubscription(stripeObj) {
+    const customerId = stripeObj.customer;
+
+    try {
+      const customerPaymentData =
+        await paymentService.getUserDataByStripeCustomerId(customerId);
+
+      if (!customerPaymentData) {
+        return;
+      }
+
+      await paymentService.setStripePaymentOnDelete(
+        stripeObj,
+        customerPaymentData
+      );
+    } catch (err) {
+      return false;
+    }
   },
 };
