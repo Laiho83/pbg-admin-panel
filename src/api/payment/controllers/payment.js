@@ -41,14 +41,4 @@ module.exports = {
       ctx.badRequest(`Email not send: ${err}`);
     }
   },
-
-  async cancelSubscriptionStripe(ctx) {
-    const response = await stripe.cancelSubscriptionStripe(ctx);
-
-    if (response[0] === 200) {
-      return (ctx.response.status = 200);
-    } else if (response[0] === 400) {
-      ctx.badRequest(response[1]);
-    }
-  },
 };

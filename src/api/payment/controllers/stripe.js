@@ -52,96 +52,39 @@ module.exports = {
     return [200];
   },
 
-  // This one is envoked when subscription is canceled and the cancel date is set. Does not delete/remove subscription
-  async cancelSubscriptionStripe(ctx) {
-    const email = ctx.state.user.email;
-    const id = ctx.params.id;
-
-    const userData = await paymentService.getUserData(id);
-
-    const userEmail = userData.email;
-    const userStripeId = userData.payment.subscription.id;
-    const userStripeCancel = userData.payment.subscription.cancelData;
-    const userStripeCustomerId = userData.stripeCustomerId;
-
-    if (userEmail === email && userStripeId && !userStripeCancel.length) {
-      try {
-        const subscription = await stripe.subscriptions.update(userStripeId, {
-          cancel_at_period_end: true,
-        });
-
-        userData.payment.subscription.cancelData = new Date();
-
-        paymentService.setStripeSubscriberRoleByCustomerId(
-          userStripeCustomerId,
-          3,
-          userData.payment
-        );
-
-        return [200];
-      } catch (err) {
-        return [400, `Subscription Cancelation Error: ${err}`];
-      }
-    }
-
-    return [400, `Subscription Cancelation Error:`];
-  },
-
+  /**
+   * Sets Stripe first subscription creation
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
   async stripeCheckoutCompleted(event) {
-    await paymentService.setStripeSubscriberRoleById(event, 3);
+    await paymentService.setStripePaymentOnFirstSubscriptionCreated(event, 3);
   },
 
+  /**
+   * Sets Stripe payment field on update (renewel, delete, ...)
+   * Role: 3 - subscriber, 1 - Authenticated
+   * setStripePaymentOnUpdate methos hecks if customer payment data exist in DB if not returns nul.
+   * In the above case, It's usually first subscription case and we have to continue to stripeCheckoutCompleted (handled in function that envokes this one)
+   */
   async stripeUpdateSubscription(event) {
-    const customerId = event.customer;
-
-    const customerPaymentData =
-      await paymentService.getUserDataByStripeCustomerId(customerId);
-
-    console.log(customerId);
-
-    // On first payment we don't have pamynet data saved so there is nothing to update
-    // we have to let the code to go to checkout.completed event
-    if (!customerPaymentData) {
-      return;
-    }
-
-    paymentService.customerStripeUpdate(event, customerPaymentData);
-
     try {
-      // await strapi.plugins["email"].services.email.sendTemplatedEmail(
-      //   {
-      //     to: "pbgww.dev@gmail.com",
-      //   },
-      //   emailTemplates.bankEmailTemplate(),
-      //   {
-      //     user: [],
-      //   }
-      // );
-      // return true;
+      const update = await paymentService.setStripePaymentOnUpdate(event);
+
+      if (!update) {
+        return;
+      }
     } catch (err) {
       return false;
     }
   },
 
-  // This one deletes subscription
+  /**
+   * Deleted subscription
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
   async stripeDeleteSubscription(event) {
     const customerId = event.customer;
 
-    if (event.status == "canceled") {
-      const data = await paymentService.getUserDataByStripeCustomerId(
-        customerId
-      );
-
-      data.payment.subscription = {
-        active: false,
-        cancelDate: new Date(),
-      };
-
-      paymentService.setStripeSubscriberRoleByCustomerId(
-        customerId,
-        1,
-        data.payment
-      );
-    }
+    console.log("DELETED");
   },
 };
