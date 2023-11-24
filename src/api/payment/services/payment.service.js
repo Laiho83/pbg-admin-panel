@@ -27,6 +27,9 @@ module.exports = {
           data: {
             role,
             orderId: `#${orderId++}`,
+            getTypeSubscription: module.exports.getTypeSubscription(
+              paymentModel.subscription.type
+            ),
             stripeCustomerId: checkoutSessionCompleted.customer,
             currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
             payment: JSON.stringify(paymentModel),
@@ -62,6 +65,9 @@ module.exports = {
           data: {
             role: paymentModelService.getRole(data.status),
             orderId: `#${orderId++}`,
+            getTypeSubscription: module.exports.getTypeSubscription(
+              paymentModel.subscription.type
+            ),
             currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
             payment: JSON.stringify(paymentModel),
           },
@@ -95,6 +101,7 @@ module.exports = {
           where: { stripeCustomerId: customerId },
           data: {
             role: 1,
+            getTypeSubscription: 0,
             currentPeriodEnd: paymentModel.subscription.endDate,
             payment: JSON.stringify(paymentModel),
           },
@@ -133,6 +140,23 @@ module.exports = {
 
   setOrderId: (customerId) => {
     return `#${customerId}00`;
+  },
+
+  /**
+   * Get Subscription type
+   * @param (type) - number .. type number
+   *   1 = 'Monthly',
+   *   6 = 'Half year',
+   *   12 = 'Yearly',
+   */
+  getTypeSubscription: async (type) => {
+    typeSubscription = {
+      1: 1,
+      6: 2,
+      12: 3,
+    };
+
+    return typeSubscription[type];
   },
 
   /**
