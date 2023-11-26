@@ -73,7 +73,6 @@ module.exports = {
    * Paypal models
    */
   customerPayPalModel(checkoutSessionCompleted) {
-    console.log("customerPayPalModel");
     return {
       provider: "paypal",
       payPalCustomerId: checkoutSessionCompleted.subscriber.payer_id,

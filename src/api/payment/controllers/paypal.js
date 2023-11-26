@@ -30,8 +30,6 @@ module.exports = {
       token
     );
 
-    console.log("VARIFICATION STATUS: ", verification_status);
-
     switch (body.event_type) {
       case "BILLING.SUBSCRIPTION.ACTIVATED":
         await module.exports.payPalSubscriptionActivated(body.resource);
