@@ -1,3 +1,7 @@
+const PAYPAL_PLAN_MONTHLY = process.env.PAYPAL_PLAN_MONTHLY;
+const PAYPAL_PLAN_SIXMONTH = process.env.PAYPAL_PLAN_SIXMONTH;
+const PAYPAL_PLAN_TWELVEMONTH = process.env.PAYPAL_PLAN_TWELVEMONTH;
+
 module.exports = {
   /**
    * Stripe models to save
@@ -69,15 +73,42 @@ module.exports = {
    * Paypal models
    */
   customerPayPalModel(checkoutSessionCompleted) {
+    console.log("customerPayPalModel");
     return {
       provider: "paypal",
-      paypalCustomId: checkoutSessionCompleted.id,
+      payPalCustomerId: checkoutSessionCompleted.subscriber.payer_id,
+      payPalEmail: checkoutSessionCompleted.subscriber.email_address,
       subscription: {
-        type: module.exports.customerPayPalModel(
-          checkoutSessionCompleted.plan_id
-        ),
-        startDate: checkoutSessionCompleted.update_time,
-        endDate: checkoutSessionCompleted.billing_info.next_billing_time,
+        id: checkoutSessionCompleted.id,
+        // invoice: checkoutSessionCompleted.invoice,
+        type: module.exports.getPayPalType(checkoutSessionCompleted.plan_id),
+        startDate: checkoutSessionCompleted.start_time,
+        currentPeriodStart: checkoutSessionCompleted.update_time,
+        currentPeriodEnd:
+          checkoutSessionCompleted.billing_info.next_billing_time,
+        endDate: "When cancelled",
+        status: checkoutSessionCompleted.status,
+      },
+    };
+  },
+
+  /**
+   * Paypal models
+   */
+  customerPayPalModelDelete(checkoutSessionCompleted) {
+    return {
+      provider: "paypal",
+      payPalCustomerId: checkoutSessionCompleted.subscriber.payer_id,
+      payPalEmail: checkoutSessionCompleted.subscriber.email_address,
+      subscription: {
+        id: checkoutSessionCompleted.id,
+        // invoice: checkoutSessionCompleted.invoice,
+        type: module.exports.getPayPalType(checkoutSessionCompleted.plan_id),
+        startDate: checkoutSessionCompleted.start_time,
+        currentPeriodStart: checkoutSessionCompleted.update_time,
+        currentPeriodEnd: checkoutSessionCompleted.status_update_time,
+        endDate: checkoutSessionCompleted.status_update_time,
+        status: checkoutSessionCompleted.status,
       },
     };
   },
@@ -89,7 +120,7 @@ module.exports = {
    *      (1-1month, 6-6month, 12-12month)
    */
   getRole(status) {
-    return status === "active" ? 3 : 1;
+    return status.toLowerCase() === "active" ? 3 : 1;
   },
 
   getPayPalType(type) {

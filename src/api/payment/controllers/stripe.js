@@ -29,7 +29,7 @@ module.exports = {
         module.exports.stripeUpdateSubscription(event.data.object);
         // console.log("Checkout updated:");
         // console.log(event.data.object);
-        break;
+        return [200];
 
       case "checkout.session.completed":
         try {
@@ -44,12 +44,8 @@ module.exports = {
       case "customer.subscription.deleted":
         module.exports.stripeDeleteSubscription(event.data.object);
 
-        break;
-      default:
-        console.log(`Unhandled event type ${event.type}`);
+        return [200];
     }
-
-    return [200];
   },
 
   /**
@@ -57,7 +53,13 @@ module.exports = {
    * Role: 3 - subscriber, 1 - Authenticated
    */
   async stripeCheckoutCompleted(event) {
-    await paymentService.setStripePaymentOnFirstSubscriptionCreated(event, 3);
+    try {
+      await paymentService.setStripePaymentOnFirstSubscriptionCreated(event, 3);
+
+      return true;
+    } catch (err) {
+      return false;
+    }
   },
 
   /**
@@ -81,6 +83,8 @@ module.exports = {
         stripeObj,
         customerPaymentData
       );
+
+      return true;
     } catch (err) {
       return false;
     }

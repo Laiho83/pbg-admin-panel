@@ -1,9 +1,5 @@
 const paymentModelService = require("./payment-model.service");
 
-const PAYPAL_PLAN_MONTHLY = process.env.PAYPAL_PLAN_MONTHLY;
-const PAYPAL_PLAN_SIXMONTH = process.env.PAYPAL_PLAN_SIXMONTH;
-const PAYPAL_PLAN_TWELVEMONTH = process.env.PAYPAL_PLAN_TWELVEMONTH;
-
 let orderId = 8492;
 
 module.exports = {
@@ -27,7 +23,7 @@ module.exports = {
           data: {
             role,
             orderId: `#${orderId++}`,
-            getTypeSubscription: module.exports.getTypeSubscription(
+            subscriptionType: module.exports.getTypeSubscription(
               paymentModel.subscription.type
             ),
             stripeCustomerId: checkoutSessionCompleted.customer,
@@ -65,7 +61,7 @@ module.exports = {
           data: {
             role: paymentModelService.getRole(data.status),
             orderId: `#${orderId++}`,
-            getTypeSubscription: module.exports.getTypeSubscription(
+            subscriptionType: module.exports.getTypeSubscription(
               paymentModel.subscription.type
             ),
             currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
@@ -101,7 +97,7 @@ module.exports = {
           where: { stripeCustomerId: customerId },
           data: {
             role: 1,
-            getTypeSubscription: 0,
+            subscriptionType: module.exports.getTypeSubscription(0),
             currentPeriodEnd: paymentModel.subscription.endDate,
             payment: JSON.stringify(paymentModel),
           },
@@ -116,8 +112,18 @@ module.exports = {
 
   /**
    * Save the data to DB for PayPal
+   * Update the data to DB PayPal
    */
-  setPayPalSubscriberRoleById: async (checkoutSessionCompleted) => {
+  setPayPalSubscriptionCreatedAndUpdate: async (checkoutSessionCompleted) => {
+    const payPalModel = paymentModelService.customerPayPalModel(
+      checkoutSessionCompleted
+    );
+
+    console.log(payPalModel);
+    console.log(
+      module.exports.getTypeSubscription(payPalModel.subscription.type)
+    );
+
     try {
       await strapi
         .query("plugin::users-permissions.user")
@@ -125,9 +131,13 @@ module.exports = {
           where: { id: checkoutSessionCompleted.custom_id },
           data: {
             role: 3,
-            payment: JSON.stringify(
-              module.exports.customerPayPalModel(checkoutSessionCompleted)
+            orderId: `#${orderId++}`,
+            paypalCustomId: payPalModel.payPalCustomerId,
+            subscriptionType: module.exports.getTypeSubscription(
+              payPalModel.subscription.type
             ),
+            currentPeriodEnd: payPalModel.subscription.currentPeriodEnd,
+            payment: JSON.stringify(payPalModel),
           },
         })
         .then(() => {
@@ -138,8 +148,33 @@ module.exports = {
     }
   },
 
-  setOrderId: (customerId) => {
-    return `#${customerId}00`;
+  /**
+   * Save the data to DB for PayPal
+   */
+  setPayPalSubscriptionDeleted: async (checkoutSessionCompleted) => {
+    const payPalModel = paymentModelService.customerPayPalModelDelete(
+      checkoutSessionCompleted
+    );
+
+    try {
+      await strapi
+        .query("plugin::users-permissions.user")
+        .update({
+          where: { id: checkoutSessionCompleted.custom_id },
+          data: {
+            role: 1,
+            orderId: "",
+            subscriptionType: module.exports.getTypeSubscription(0),
+            currentPeriodEnd: payPalModel.subscription.currentPeriodEnd,
+            payment: JSON.stringify(payPalModel),
+          },
+        })
+        .then(() => {
+          return true;
+        });
+    } catch (err) {
+      return err;
+    }
   },
 
   /**
@@ -149,11 +184,12 @@ module.exports = {
    *   6 = 'Half year',
    *   12 = 'Yearly',
    */
-  getTypeSubscription: async (type) => {
-    typeSubscription = {
-      1: 1,
-      6: 2,
-      12: 3,
+  getTypeSubscription: (type) => {
+    const typeSubscription = {
+      0: "None",
+      1: "Monthly",
+      6: "Half Year",
+      12: "Yearly",
     };
 
     return typeSubscription[type];

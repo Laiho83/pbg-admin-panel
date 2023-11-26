@@ -20,8 +20,6 @@ module.exports = {
     } catch (err) {
       return [400, `Subscription Error: ${err}`];
     }
-
-    return true;
   },
 
   async webhookPayPal(ctx) {
@@ -32,15 +30,69 @@ module.exports = {
       token
     );
 
-    if (verification_status === "SUCCESS") {
-      if (body.event_type === "BILLING.SUBSCRIPTION.ACTIVATED") {
-        paymentService.setPayPalSubscriberRoleById(body.resource);
-        return [200];
-      }
-    }
+    console.log("VARIFICATION STATUS: ", verification_status);
 
-    return [400, `Subscription Error`];
+    switch (body.event_type) {
+      case "BILLING.SUBSCRIPTION.ACTIVATED":
+        await module.exports.payPalSubscriptionActivated(body.resource);
+        return [200];
+      case "BILLING.SUBSCRIPTION.UPDATED":
+        await module.exports.payPalSubscriptionUpdated(body.resource);
+        return [200];
+      case "BILLING.SUBSCRIPTION.SUSPENDED":
+        await module.exports.payPalSubscriptionSuspended(body.resource);
+        return [200];
+      case "BILLING.SUBSCRIPTION.CANCELLED":
+        await module.exports.payPalSubscriptionCancelled(body.resource);
+        return [200];
+      default:
+        return [];
+    }
   },
+
+  /**
+   * Sets PayPal first subscription creation
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
+  async payPalSubscriptionActivated(event) {
+    paymentService.setPayPalSubscriptionCreatedAndUpdate(event);
+    // console.log("ACTIVATED");
+    //console.log(event);
+  },
+
+  /**
+   * Sets PayPal payment field on update (renewel, delete, ...)
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
+  async payPalSubscriptionUpdated(event) {
+    paymentService.setPayPalSubscriptionCreatedAndUpdate(event);
+    //console.log("UPDATED");
+    //console.log(event);
+  },
+
+  /**
+   * Suspendes subscription, so it does not delete it from paypal, it can be renewed
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
+  async payPalSubscriptionSuspended(event) {
+    paymentService.setPayPalSubscriptionDeleted(event);
+    //console.log("SUSPENDED");
+    //console.log(event);
+  },
+
+  /**
+   * Deleted subscription - deletes from paypal can't renew
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
+  async payPalSubscriptionCancelled(event) {
+    paymentService.setPayPalSubscriptionDeleted(event);
+    //console.log("CANCELLED");
+    //console.log(event);
+  },
+
+  /**
+   * PayPal validation methods
+   */
 
   // Generate access token
   async generateAccessToken() {
