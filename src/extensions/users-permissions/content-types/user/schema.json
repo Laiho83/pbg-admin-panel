@@ -90,11 +90,6 @@
       "default": false,
       "required": true
     },
-    "paypalCustomId": {
-      "type": "string",
-      "private": true,
-      "unique": true
-    },
     "orderId": {
       "type": "string"
     },
@@ -110,6 +105,10 @@
         "Yearly"
       ],
       "default": "None"
+    },
+    "paypalSubscriptionId": {
+      "type": "string",
+      "private": true
     }
   }
 }

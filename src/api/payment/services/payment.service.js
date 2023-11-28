@@ -119,20 +119,25 @@ module.exports = {
       checkoutSessionCompleted
     );
 
-    console.log(payPalModel);
-    console.log(
-      module.exports.getTypeSubscription(payPalModel.subscription.type)
-    );
+    let selection = {};
+
+    if (checkoutSessionCompleted.hasOwnProperty("custom_id")) {
+      selection = { id: checkoutSessionCompleted.custom_id };
+    } else {
+      selection = { paypalSubscriptionId: checkoutSessionCompleted.id };
+    }
+
+    console.log(selection);
 
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
-          where: { id: checkoutSessionCompleted.custom_id },
+          where: selection,
           data: {
             role: 3,
             orderId: `#${orderId++}`,
-            paypalCustomId: payPalModel.payPalCustomerId,
+            paypalSubscriptionId: payPalModel.subscription.id,
             subscriptionType: module.exports.getTypeSubscription(
               payPalModel.subscription.type
             ),
@@ -156,11 +161,19 @@ module.exports = {
       checkoutSessionCompleted
     );
 
+    let selection = {};
+
+    if (checkoutSessionCompleted.hasOwnProperty("custom_id")) {
+      selection = { id: checkoutSessionCompleted.custom_id };
+    } else {
+      selection = { paypalSubscriptionId: checkoutSessionCompleted.id };
+    }
+
     try {
       await strapi
         .query("plugin::users-permissions.user")
         .update({
-          where: { id: checkoutSessionCompleted.custom_id },
+          where: selection,
           data: {
             role: 1,
             orderId: "",

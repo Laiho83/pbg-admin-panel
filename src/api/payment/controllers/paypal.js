@@ -13,15 +13,6 @@ const baseURL = {
 };
 
 module.exports = {
-  async subscription(ctx) {
-    try {
-      // await paymentService.setPayPalSubscriberRoleByEmail(ctx.request.body);
-      return [200];
-    } catch (err) {
-      return [400, `Subscription Error: ${err}`];
-    }
-  },
-
   async webhookPayPal(ctx) {
     const body = ctx.request.body;
     const token = await module.exports.generateAccessToken();
@@ -29,6 +20,10 @@ module.exports = {
       ctx,
       token
     );
+
+    if (verification_status !== "SUCCESS") {
+      return;
+    }
 
     switch (body.event_type) {
       case "BILLING.SUBSCRIPTION.ACTIVATED":
