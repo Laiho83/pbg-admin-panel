@@ -102,13 +102,22 @@
         "None",
         "Monthly",
         "Half Year",
-        "Yearly"
+        "Yearly",
+        "Endless"
       ],
       "default": "None"
     },
     "paypalSubscriptionId": {
       "type": "string",
       "private": true
+    },
+    "paymentType": {
+      "type": "enumeration",
+      "enum": [
+        "Manual",
+        "Stripe",
+        "PayPal"
+      ]
     }
   }
 }
