@@ -114,6 +114,7 @@
     "paymentType": {
       "type": "enumeration",
       "enum": [
+        "None",
         "Manual",
         "Stripe",
         "PayPal"
