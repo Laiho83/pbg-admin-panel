@@ -23,6 +23,7 @@ module.exports = {
           data: {
             role,
             orderId: `#${orderId++}`,
+            paymentType: "Stripe",
             subscriptionType: module.exports.getTypeSubscription(
               paymentModel.subscription.type
             ),
@@ -137,6 +138,7 @@ module.exports = {
           data: {
             role: 3,
             orderId: `#${orderId++}`,
+            paymentType: "PayPal",
             paypalSubscriptionId: payPalModel.subscription.id,
             subscriptionType: module.exports.getTypeSubscription(
               payPalModel.subscription.type

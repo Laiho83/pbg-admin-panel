@@ -119,6 +119,18 @@
         "Stripe",
         "PayPal"
       ]
+    },
+    "subscriptionStatus": {
+      "type": "enumeration",
+      "enum": [
+        "None",
+        "Active",
+        "Pending Cancellation",
+        "On Hold",
+        "Canceled"
+      ],
+      "default": "None",
+      "private": true
     }
   }
 }
