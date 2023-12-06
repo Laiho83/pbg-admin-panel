@@ -25,9 +25,18 @@ module.exports = {
 
     // Handle the event
     switch (event.type) {
+      case "customer.subscription.created":
+        module.exports.stripeNewSubscriptionForExistingUsers(event.data.object);
+
       case "customer.subscription.updated":
         module.exports.stripeUpdateSubscription(event.data.object);
         // console.log("Checkout updated:");
+        // console.log(event.data.object);
+        return [200];
+
+      case "invoice.payment_succeeded":
+        // module.exports.stripeUpdateSubscription(event.data.object);
+        // console.log("Checkout payment_succeeded:");
         // console.log(event.data.object);
         return [200];
 
@@ -41,10 +50,25 @@ module.exports = {
           return [400, `Subscription Error: ${err}`];
         }
 
-      case "customer.subscription.deleted":
-        module.exports.stripeDeleteSubscription(event.data.object);
+      // case "customer.subscription.deleted":
+      //   module.exports.stripeDeleteSubscription(event.data.object);
 
-        return [200];
+      //   return [200];
+    }
+  },
+
+  /**
+   * Sets Stripe first subscription for existing users. When renewing the system subscription had to be added to each existing customer.
+   * IN PROGRESS !!!!!
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
+  async stripeNewSubscriptionForExistingUsers(event) {
+    try {
+      await paymentService.setStripePaymentOnFirstSubscriptionCreated(event, 3);
+
+      return true;
+    } catch (err) {
+      return false;
     }
   },
 

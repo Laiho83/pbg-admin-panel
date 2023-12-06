@@ -27,6 +27,8 @@ module.exports = {
             subscriptionType: module.exports.getTypeSubscription(
               paymentModel.subscription.type
             ),
+            subscriptionStatus:
+              module.exports.getStripeSubscriptionStatus("active"),
             stripeCustomerId: checkoutSessionCompleted.customer,
             currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
             payment: JSON.stringify(paymentModel),
@@ -54,6 +56,12 @@ module.exports = {
       customerPaymentData
     );
 
+    const status = data.status.toLowerCase();
+
+    if (data.cancel_at_period_end == true) {
+      status = "pending_cancelation";
+    }
+
     try {
       await strapi
         .query("plugin::users-permissions.user")
@@ -62,6 +70,8 @@ module.exports = {
           data: {
             role: paymentModelService.getRole(data.status),
             orderId: `#${orderId++}`,
+            subscriptionStatus:
+              module.exports.getStripeSubscriptionStatus(status),
             subscriptionType: module.exports.getTypeSubscription(
               paymentModel.subscription.type
             ),
@@ -99,6 +109,8 @@ module.exports = {
           data: {
             role: 1,
             subscriptionType: module.exports.getTypeSubscription(0),
+            subscriptionStatus:
+              module.exports.getStripeSubscriptionStatus("delete"),
             currentPeriodEnd: paymentModel.subscription.endDate,
             payment: JSON.stringify(paymentModel),
           },
@@ -127,8 +139,6 @@ module.exports = {
     } else {
       selection = { paypalSubscriptionId: checkoutSessionCompleted.id };
     }
-
-    console.log(selection);
 
     try {
       await strapi
@@ -235,5 +245,17 @@ module.exports = {
     } catch (err) {
       return err;
     }
+  },
+
+  getStripeSubscriptionStatus: (type) => {
+    const typeSubscription = {
+      none: "None",
+      active: "Active",
+      pending_cancelation: "Pending Cancellation",
+      past_due: "On Hold",
+      delete: "Canceled",
+    };
+
+    return typeSubscription[type];
   },
 };

@@ -3,15 +3,17 @@
 /**
  * A set of functions called "actions" for `payment providers`
  */
-
 const paypal = require("./paypal.js");
 const stripe = require("./stripe.js");
 const bankPayment = require("./bank-payment/bank-payment.js");
-const paymentService = require("../services/payment.service.js");
 
 module.exports = {
   async webhookStripe(ctx) {
     const response = await stripe.stripe(ctx);
+
+    if (response === undefined) {
+      return;
+    }
 
     if (response[0] === 200) {
       return (ctx.response.status = 200);
@@ -23,6 +25,10 @@ module.exports = {
   async webhookPayPal(ctx) {
     const response = await paypal.webhookPayPal(ctx);
 
+    if (response === undefined) {
+      return;
+    }
+
     if (response[0] === 200) {
       ctx.response.status = 200;
     } else if (response[0] === 400) {
@@ -32,6 +38,10 @@ module.exports = {
 
   async bankPayment(ctx) {
     const response = await bankPayment.mail(ctx);
+
+    if (response === undefined) {
+      return;
+    }
 
     if (response) {
       ctx.response.status = 200;

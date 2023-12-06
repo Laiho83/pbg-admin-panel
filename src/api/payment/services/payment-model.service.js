@@ -53,6 +53,10 @@ module.exports = {
     payment.subscription.currentPeriodEnd = new Date(
       dataFromStripe.current_period_end * 1000
     );
+    payment.subscription.endDate =
+      dataFromStripe.cancel_at_period_end == true
+        ? dataFromStripe.cancel_at
+        : "When cancelled";
 
     return payment;
   },
