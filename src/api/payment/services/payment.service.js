@@ -50,17 +50,15 @@ module.exports = {
    */
   setStripePaymentOnUpdate: async (data, customerPaymentData) => {
     const customerId = data.customer;
-
     const paymentModel = paymentModelService.customerStripeUpdate(
       data,
       customerPaymentData
     );
 
-    const status = data.status.toLowerCase();
-
-    if (data.cancel_at_period_end == true) {
-      status = "pending_cancelation";
-    }
+    const status =
+      data.cancel_at_period_end == true
+        ? "pending_cancelation"
+        : data.status.toLowerCase();
 
     try {
       await strapi

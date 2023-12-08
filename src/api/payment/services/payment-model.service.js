@@ -39,24 +39,29 @@ module.exports = {
 
   customerStripeUpdate(dataFromStripe, customerPaymentData) {
     const payment = customerPaymentData.payment;
+    const currentPeriodStart = new Date(
+      dataFromStripe.current_period_start * 1000
+    );
+    const currentPeriodEnd = new Date(dataFromStripe.current_period_end * 1000);
     const monthlySubscription = dataFromStripe.plan.amount
       ? parseInt((dataFromStripe.plan.amount / 10000) * 12)
       : customerPaymentData.subscription.type;
-
-    payment.subscription.id = dataFromStripe.id;
-    payment.subscription.type = monthlySubscription;
-    payment.subscription.invoice = dataFromStripe.latest_invoice;
-    payment.subscription.status = dataFromStripe.status;
-    payment.subscription.currentPeriodStart = new Date(
-      dataFromStripe.current_period_start * 1000
-    );
-    payment.subscription.currentPeriodEnd = new Date(
-      dataFromStripe.current_period_end * 1000
-    );
-    payment.subscription.endDate =
+    const endDate =
       dataFromStripe.cancel_at_period_end == true
         ? dataFromStripe.cancel_at
         : "When cancelled";
+
+    payment.subscription.id = dataFromStripe.id;
+    payment.subscription.type = monthlySubscription;
+    payment.subscription.invoice =
+      dataFromStripe.latest_invoice ?? payment.subscription.invoice;
+    payment.subscription.status =
+      dataFromStripe.status ?? payment.subscription.status;
+    payment.subscription.currentPeriodStart =
+      currentPeriodStart ?? payment.subscription.currentPeriodStart;
+    payment.subscription.currentPeriodEnd =
+      currentPeriodEnd ?? payment.subscription.currentPeriodEnd;
+    payment.subscription.endDate = endDate ?? payment.subscription.endDate;
 
     return payment;
   },
@@ -69,6 +74,7 @@ module.exports = {
 
     payment.subscription.id = dataFromStripe.id;
     payment.subscription.endDate = endDate;
+    payment.subscription.status = "Canceled";
 
     return payment;
   },

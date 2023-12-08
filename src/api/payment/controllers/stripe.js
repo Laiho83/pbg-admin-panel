@@ -26,17 +26,8 @@ module.exports = {
     // Handle the event
     switch (event.type) {
       case "customer.subscription.created":
-        module.exports.stripeNewSubscriptionForExistingUsers(event.data.object);
-
-      case "customer.subscription.updated":
         module.exports.stripeUpdateSubscription(event.data.object);
-        // console.log("Checkout updated:");
-        // console.log(event.data.object);
-        return [200];
-
-      case "invoice.payment_succeeded":
-        // module.exports.stripeUpdateSubscription(event.data.object);
-        // console.log("Checkout payment_succeeded:");
+        // console.log("Subscription created:");
         // console.log(event.data.object);
         return [200];
 
@@ -50,25 +41,25 @@ module.exports = {
           return [400, `Subscription Error: ${err}`];
         }
 
-      // case "customer.subscription.deleted":
-      //   module.exports.stripeDeleteSubscription(event.data.object);
+      case "customer.subscription.updated":
+        try {
+          module.exports.stripeUpdateSubscription(event.data.object);
+          // console.log("Subscription updated:");
+          // console.log(event.data.object);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
 
-      //   return [200];
-    }
-  },
-
-  /**
-   * Sets Stripe first subscription for existing users. When renewing the system subscription had to be added to each existing customer.
-   * IN PROGRESS !!!!!
-   * Role: 3 - subscriber, 1 - Authenticated
-   */
-  async stripeNewSubscriptionForExistingUsers(event) {
-    try {
-      await paymentService.setStripePaymentOnFirstSubscriptionCreated(event, 3);
-
-      return true;
-    } catch (err) {
-      return false;
+      case "customer.subscription.deleted":
+        try {
+          module.exports.stripeDeleteSubscription(event.data.object);
+          // console.log("Subscription updated:");
+          // console.log(event.data.object);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
     }
   },
 
@@ -78,7 +69,7 @@ module.exports = {
    */
   async stripeCheckoutCompleted(event) {
     try {
-      await paymentService.setStripePaymentOnFirstSubscriptionCreated(event, 3);
+      await paymentService.setStripePaymentOnFirstSubscriptionCreated(event);
 
       return true;
     } catch (err) {
@@ -94,15 +85,13 @@ module.exports = {
    */
   async stripeUpdateSubscription(stripeObj) {
     const customerId = stripeObj.customer;
+    const customerPaymentData = await module.exports.getuserData(customerId);
+
+    if (!customerPaymentData) {
+      return;
+    }
 
     try {
-      const customerPaymentData =
-        await paymentService.getUserDataByStripeCustomerId(customerId);
-
-      if (!customerPaymentData) {
-        return;
-      }
-
       await paymentService.setStripePaymentOnUpdate(
         stripeObj,
         customerPaymentData
@@ -120,21 +109,27 @@ module.exports = {
    */
   async stripeDeleteSubscription(stripeObj) {
     const customerId = stripeObj.customer;
+    const customerPaymentData = await module.exports.getuserData(customerId);
+
+    if (!customerPaymentData) {
+      return;
+    }
 
     try {
-      const customerPaymentData =
-        await paymentService.getUserDataByStripeCustomerId(customerId);
-
-      if (!customerPaymentData) {
-        return;
-      }
-
       await paymentService.setStripePaymentOnDelete(
         stripeObj,
         customerPaymentData
       );
     } catch (err) {
       return false;
+    }
+  },
+
+  async getuserData(customerId) {
+    try {
+      return await paymentService.getUserDataByStripeCustomerId(customerId);
+    } catch (err) {
+      return null;
     }
   },
 };
