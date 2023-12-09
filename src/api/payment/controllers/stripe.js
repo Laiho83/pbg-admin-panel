@@ -26,14 +26,18 @@ module.exports = {
     // Handle the event
     switch (event.type) {
       case "customer.subscription.created":
-        module.exports.stripeUpdateSubscription(event.data.object);
-        // console.log("Subscription created:");
-        // console.log(event.data.object);
-        return [200];
+        try {
+          await module.exports.stripeUpdateSubscription(event.data.object);
+          // console.log("Subscription created:");
+          // console.log(event.data.object);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
 
       case "checkout.session.completed":
         try {
-          module.exports.stripeCheckoutCompleted(event.data.object);
+          await module.exports.stripeCheckoutCompleted(event.data.object);
           // console.log("Checkout completed:");
           // console.log(event.data.object);
           return [200];
@@ -43,7 +47,7 @@ module.exports = {
 
       case "customer.subscription.updated":
         try {
-          module.exports.stripeUpdateSubscription(event.data.object);
+          await module.exports.stripeUpdateSubscription(event.data.object);
           // console.log("Subscription updated:");
           // console.log(event.data.object);
           return [200];
@@ -53,7 +57,7 @@ module.exports = {
 
       case "customer.subscription.deleted":
         try {
-          module.exports.stripeDeleteSubscription(event.data.object);
+          await module.exports.stripeDeleteSubscription(event.data.object);
           // console.log("Subscription updated:");
           // console.log(event.data.object);
           return [200];

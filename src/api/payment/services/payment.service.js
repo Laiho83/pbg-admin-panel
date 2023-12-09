@@ -151,6 +151,9 @@ module.exports = {
             subscriptionType: module.exports.getTypeSubscription(
               payPalModel.subscription.type
             ),
+            subscriptionStatus: module.exports.getPayPalSubscriptionStatus(
+              payPalModel.subscription.status.toLowerCase() ?? "none"
+            ),
             currentPeriodEnd: payPalModel.subscription.currentPeriodEnd,
             payment: JSON.stringify(payPalModel),
           },
@@ -188,6 +191,8 @@ module.exports = {
             role: 1,
             orderId: "",
             subscriptionType: module.exports.getTypeSubscription(0),
+            subscriptionStatus:
+              module.exports.getPayPalSubscriptionStatus("canceled"),
             currentPeriodEnd: payPalModel.subscription.currentPeriodEnd,
             payment: JSON.stringify(payPalModel),
           },
@@ -252,6 +257,20 @@ module.exports = {
       pending_cancelation: "Pending Cancellation",
       past_due: "On Hold",
       delete: "Canceled",
+    };
+
+    return typeSubscription[type];
+  },
+
+  getPayPalSubscriptionStatus: (type) => {
+    const typeSubscription = {
+      none: "None",
+      active: "Active",
+      pending_cancelation: "Pending Cancellation",
+      suspended: "On Hold",
+      paused: "On Hold",
+      cancelled: "Canceled",
+      canceled: "Canceled",
     };
 
     return typeSubscription[type];

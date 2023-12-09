@@ -27,17 +27,37 @@ module.exports = {
 
     switch (body.event_type) {
       case "BILLING.SUBSCRIPTION.ACTIVATED":
-        await module.exports.payPalSubscriptionActivated(body.resource);
-        return [200];
+        try {
+          await module.exports.payPalSubscriptionActivated(body.resource);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
+
       case "BILLING.SUBSCRIPTION.UPDATED":
-        await module.exports.payPalSubscriptionUpdated(body.resource);
-        return [200];
+        try {
+          await module.exports.payPalSubscriptionUpdated(body.resource);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
+
       case "BILLING.SUBSCRIPTION.SUSPENDED":
-        await module.exports.payPalSubscriptionSuspended(body.resource);
-        return [200];
+        try {
+          await module.exports.payPalSubscriptionSuspended(body.resource);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
+
       case "BILLING.SUBSCRIPTION.CANCELLED":
-        await module.exports.payPalSubscriptionCancelled(body.resource);
-        return [200];
+        try {
+          await module.exports.payPalSubscriptionCancelled(body.resource);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
+
       default:
         return [];
     }
@@ -50,7 +70,7 @@ module.exports = {
   async payPalSubscriptionActivated(event) {
     paymentService.setPayPalSubscriptionCreatedAndUpdate(event);
     // console.log("ACTIVATED");
-    //console.log(event);
+    // console.log(event);
   },
 
   /**
@@ -59,8 +79,8 @@ module.exports = {
    */
   async payPalSubscriptionUpdated(event) {
     paymentService.setPayPalSubscriptionCreatedAndUpdate(event);
-    //console.log("UPDATED");
-    //console.log(event);
+    // console.log("UPDATED");
+    // console.log(event);
   },
 
   /**
@@ -69,8 +89,8 @@ module.exports = {
    */
   async payPalSubscriptionSuspended(event) {
     paymentService.setPayPalSubscriptionDeleted(event);
-    //console.log("SUSPENDED");
-    //console.log(event);
+    // console.log("SUSPENDED");
+    // console.log(event);
   },
 
   /**
@@ -79,8 +99,8 @@ module.exports = {
    */
   async payPalSubscriptionCancelled(event) {
     paymentService.setPayPalSubscriptionDeleted(event);
-    //console.log("CANCELLED");
-    //console.log(event);
+    // console.log("CANCELLED");
+    // console.log(event);
   },
 
   /**
