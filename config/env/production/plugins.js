@@ -14,8 +14,8 @@ module.exports = ({ env }) => ({
         apiKey: env("SENDGRID_API_KEY"),
       },
       settings: {
-        defaultFrom: "pbgww.dev@gmail.com",
-        defaultReplyTo: "pbgww.dev@gmail.com",
+        defaultFrom: "PrettyBarnGood <info@prettybarngood.com>",
+        defaultReplyTo: "info@prettybarngood.com",
       },
     },
   },
