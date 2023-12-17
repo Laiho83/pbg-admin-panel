@@ -14,6 +14,9 @@ module.exports = {
     const paymentModel = paymentModelService.customerStripeModel(
       checkoutSessionCompleted
     );
+    const periodEnd = new Date(
+      paymentModel.subscription.currentPeriodEnd
+    ).toISOString();
 
     try {
       await strapi
@@ -30,7 +33,7 @@ module.exports = {
             subscriptionStatus:
               module.exports.getStripeSubscriptionStatus("active"),
             stripeCustomerId: checkoutSessionCompleted.customer,
-            currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
+            currentPeriodEnd: periodEnd,
             payment: JSON.stringify(paymentModel),
           },
         })
@@ -54,6 +57,9 @@ module.exports = {
       data,
       customerPaymentData
     );
+    const periodEnd = new Date(
+      paymentModel.subscription.currentPeriodEnd
+    ).toISOString();
 
     const status =
       data.cancel_at_period_end == true
@@ -73,7 +79,7 @@ module.exports = {
             subscriptionType: module.exports.getTypeSubscription(
               paymentModel.subscription.type
             ),
-            currentPeriodEnd: paymentModel.subscription.currentPeriodEnd,
+            currentPeriodEnd: periodEnd,
             payment: JSON.stringify(paymentModel),
           },
         })
