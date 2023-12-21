@@ -129,8 +129,7 @@
         "On Hold",
         "Canceled"
       ],
-      "default": "None",
-      "private": true
+      "default": "None"
     }
   }
 }
