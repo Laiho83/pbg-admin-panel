@@ -87,7 +87,7 @@
     },
     "passwordRenewel": {
       "type": "boolean",
-      "default": false,
+      "default": true,
       "required": true
     },
     "orderId": {
