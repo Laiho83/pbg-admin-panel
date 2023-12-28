@@ -22,7 +22,7 @@ module.exports = {
     );
 
     if (verification_status !== "SUCCESS") {
-      return;
+      return [400, "PayPal Error: Verification status failed"];
     }
 
     switch (body.event_type) {
@@ -59,7 +59,7 @@ module.exports = {
         }
 
       default:
-        return [];
+        return [400, "PayPal Error: Event type does not exist"];
     }
   },
 

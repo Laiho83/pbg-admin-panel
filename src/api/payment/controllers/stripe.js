@@ -20,7 +20,7 @@ module.exports = {
         endpointSecret
       );
     } catch (err) {
-      return [400, `Webhook Error: ${err}`];
+      return [400, `Stripe Error: Verification failed, ${err}`];
     }
 
     // Handle the event
@@ -64,6 +64,8 @@ module.exports = {
         } catch (err) {
           return [400, `Subscription Error: ${err}`];
         }
+      default:
+        return [400, "Stripe Error: Event type does not exist"];
     }
   },
 

@@ -16,7 +16,10 @@ module.exports = {
     }
 
     if (response[0] === 200) {
-      return (ctx.response.status = 200);
+      ctx.response.status = 200;
+      ctx.response.body = JSON.stringify(
+        "Webhook Stripe successfully processed"
+      );
     } else if (response[0] === 400) {
       ctx.badRequest(response[1]);
     }
@@ -31,6 +34,9 @@ module.exports = {
 
     if (response[0] === 200) {
       ctx.response.status = 200;
+      ctx.response.body = JSON.stringify(
+        "Webhook - PayPal successfully processed"
+      );
     } else if (response[0] === 400) {
       ctx.badRequest(response[1]);
     }
@@ -47,8 +53,7 @@ module.exports = {
       ctx.response.status = 200;
       ctx.response.body = JSON.stringify("Email send");
     } else {
-      ctx.body = err;
-      ctx.badRequest(`Email not send: ${err}`);
+      ctx.badRequest(`Email not send`);
     }
   },
 };
