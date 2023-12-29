@@ -24,8 +24,7 @@ module.exports = {
     if (verification_status !== "SUCCESS") {
       return [
         400,
-        "PayPal Error: Verification status failed: " + verification_status ??
-          "not available",
+        "PayPal Error: Verification status failed: " + verification_status,
       ];
     }
 
