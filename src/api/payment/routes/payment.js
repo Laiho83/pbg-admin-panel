@@ -24,5 +24,13 @@ module.exports = {
         policies: ["global::hasPermissions"],
       },
     },
+    {
+      method: "POST",
+      path: "/create-customer-portal-session/:id",
+      handler: "payment.customerPortal",
+      config: {
+        policies: ["global::hasPermissions"],
+      },
+    },
   ],
 };

@@ -56,4 +56,24 @@ module.exports = {
       ctx.badRequest(`Email not send`);
     }
   },
+
+  async customerPortal(ctx) {
+    const id = ctx.params.id;
+
+    const response = await stripe.redirectToCustomerPortal(id);
+
+    if (response === undefined) {
+      return;
+    }
+
+    console.log(response[0]);
+    if (response[0] === 200) {
+      ctx.response.status = 200;
+      ctx.response.body = JSON.stringify({
+        url: response[1],
+      });
+    } else {
+      ctx.badRequest(`Stripe redirect failed`);
+    }
+  },
 };

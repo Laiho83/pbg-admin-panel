@@ -131,6 +131,26 @@ module.exports = {
     }
   },
 
+  async redirectToCustomerPortal(id) {
+    try {
+      const data = await paymentService.getUserData(id);
+
+      const CUSTOMER_ID = data?.stripeCustomerId ?? null;
+      let session = null;
+
+      if (CUSTOMER_ID) {
+        session = await stripe.billingPortal.sessions.create({
+          customer: CUSTOMER_ID,
+          return_url: "https://example.com/account",
+        });
+      }
+
+      return [200, session.url];
+    } catch (err) {
+      return [400];
+    }
+  },
+
   async getuserData(customerId) {
     try {
       return await paymentService.getUserDataByStripeCustomerId(customerId);
