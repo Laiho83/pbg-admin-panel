@@ -129,7 +129,14 @@ module.exports = {
    *      (1-1month, 6-6month, 12-12month)
    */
   getRole(status) {
-    return status.toLowerCase() === "active" ? 3 : 1;
+    switch (status.toLowerCase()) {
+      case "active":
+        return 3;
+      case "past_due":
+        return 3;
+      default:
+        return 1;
+    }
   },
 
   getPayPalType(type) {

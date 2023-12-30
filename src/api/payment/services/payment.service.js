@@ -105,6 +105,8 @@ module.exports = {
       customerPaymentData
     );
 
+    const periodEnd = new Date(paymentModel.subscription.endDate).toISOString();
+
     try {
       await strapi
         .query("plugin::users-permissions.user")
@@ -115,7 +117,7 @@ module.exports = {
             subscriptionType: module.exports.getTypeSubscription(0),
             subscriptionStatus:
               module.exports.getStripeSubscriptionStatus("delete"),
-            currentPeriodEnd: paymentModel.subscription.endDate,
+            currentPeriodEnd: periodEnd,
             payment: JSON.stringify(paymentModel),
           },
         })
