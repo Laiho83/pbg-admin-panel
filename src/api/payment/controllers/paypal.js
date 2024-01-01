@@ -7,10 +7,7 @@ const CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 const APP_SECRET = process.env.PAYPAL_APP_SECRET;
 const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID;
 
-const baseURL = {
-  sandbox: "https://api-m.sandbox.paypal.com",
-  production: "https://api-m.paypal.com",
-};
+const PAYPAL_URL = process.env.PAYPAL_URL;
 
 module.exports = {
   async webhookPayPal(ctx) {
@@ -115,7 +112,7 @@ module.exports = {
     const auth = Buffer.from(CLIENT_ID + ":" + APP_SECRET).toString("base64");
 
     try {
-      const response = await fetch(`${baseURL.sandbox}/v1/oauth2/token`, {
+      const response = await fetch(`${PAYPAL_URL}/v1/oauth2/token`, {
         method: "POST",
         body: "grant_type=client_credentials",
         headers: {
@@ -134,7 +131,7 @@ module.exports = {
   async webhookSignature(ctx, auth) {
     try {
       let response = await fetch(
-        `${baseURL.sandbox}/v1/notifications/verify-webhook-signature`,
+        `${PAYPAL_URL}/v1/notifications/verify-webhook-signature`,
         {
           method: "POST",
           body: JSON.stringify({
