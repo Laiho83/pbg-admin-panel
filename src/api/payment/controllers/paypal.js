@@ -20,7 +20,7 @@ module.exports = {
 
     if (verification_status !== "SUCCESS") {
       return [
-        400,
+        403,
         "PayPal Error: Verification status failed: " + verification_status,
       ];
     }
@@ -37,6 +37,14 @@ module.exports = {
       case "BILLING.SUBSCRIPTION.UPDATED":
         try {
           await module.exports.payPalSubscriptionUpdated(body.resource);
+          return [200];
+        } catch (err) {
+          return [400, `Subscription Error: ${err}`];
+        }
+
+      case "BILLING.SUBSCRIPTION.PAYMENT.FAILED":
+        try {
+          await module.exports.payPalSubscriptionFailed(body.resource);
           return [200];
         } catch (err) {
           return [400, `Subscription Error: ${err}`];
@@ -80,6 +88,16 @@ module.exports = {
   async payPalSubscriptionUpdated(event) {
     paymentService.setPayPalSubscriptionCreatedAndUpdate(event);
     // console.log("UPDATED");
+    // console.log(event);
+  },
+
+  /**
+   * Sets PayPal payment field
+   * Role: 3 - subscriber, 1 - Authenticated
+   */
+  async payPalSubscriptionFailed(event) {
+    paymentService.setPayPalSubscriptionFailed(event);
+    // console.log("FAILED");
     // console.log(event);
   },
 

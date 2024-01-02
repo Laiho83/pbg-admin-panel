@@ -133,17 +133,15 @@ module.exports = {
    * Save the data to DB for PayPal
    * Update the data to DB PayPal
    */
-  setPayPalSubscriptionCreatedAndUpdate: async (checkoutSessionCompleted) => {
-    const payPalModel = paymentModelService.customerPayPalModel(
-      checkoutSessionCompleted
-    );
+  setPayPalSubscriptionCreatedAndUpdate: async (data) => {
+    const payPalModel = paymentModelService.customerPayPalModel(data);
 
     let selection = {};
 
-    if (checkoutSessionCompleted.hasOwnProperty("custom_id")) {
-      selection = { id: checkoutSessionCompleted.custom_id };
+    if (data.hasOwnProperty("custom_id")) {
+      selection = { id: data.custom_id };
     } else {
-      selection = { paypalSubscriptionId: checkoutSessionCompleted.id };
+      selection = { paypalSubscriptionId: data.id };
     }
 
     try {
@@ -176,18 +174,57 @@ module.exports = {
 
   /**
    * Save the data to DB for PayPal
+   * Update the data to DB PayPal
    */
-  setPayPalSubscriptionDeleted: async (checkoutSessionCompleted) => {
-    const payPalModel = paymentModelService.customerPayPalModelDelete(
-      checkoutSessionCompleted
-    );
+  setPayPalSubscriptionFailed: async (data) => {
+    const payPalModel = paymentModelService.customerPayPalModel(data);
 
     let selection = {};
 
-    if (checkoutSessionCompleted.hasOwnProperty("custom_id")) {
-      selection = { id: checkoutSessionCompleted.custom_id };
+    if (data.hasOwnProperty("custom_id")) {
+      selection = { id: data.custom_id };
     } else {
-      selection = { paypalSubscriptionId: checkoutSessionCompleted.id };
+      selection = { paypalSubscriptionId: data.id };
+    }
+
+    try {
+      await strapi
+        .query("plugin::users-permissions.user")
+        .update({
+          where: selection,
+          data: {
+            role: 3,
+            orderId: `#${orderId++}`,
+            paymentType: "PayPal",
+            paypalSubscriptionId: payPalModel.subscription.id,
+            subscriptionType: module.exports.getTypeSubscription(
+              payPalModel.subscription.type
+            ),
+            subscriptionStatus: "On Hold",
+            currentPeriodEnd: payPalModel.subscription.currentPeriodEnd,
+            payment: JSON.stringify(payPalModel),
+          },
+        })
+        .then(() => {
+          return true;
+        });
+    } catch (err) {
+      return err;
+    }
+  },
+
+  /**
+   * Save the data to DB for PayPal
+   */
+  setPayPalSubscriptionDeleted: async (data) => {
+    const payPalModel = paymentModelService.customerPayPalModelDelete(data);
+
+    let selection = {};
+
+    if (data.hasOwnProperty("custom_id")) {
+      selection = { id: data.custom_id };
+    } else {
+      selection = { paypalSubscriptionId: data.id };
     }
 
     try {
@@ -275,8 +312,8 @@ module.exports = {
       none: "None",
       active: "Active",
       pending_cancelation: "Pending Cancellation",
-      suspended: "On Hold",
-      paused: "On Hold",
+      suspended: "Canceled",
+      paused: "Canceled",
       cancelled: "Canceled",
       canceled: "Canceled",
     };

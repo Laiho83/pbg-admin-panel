@@ -66,7 +66,6 @@ module.exports = {
       return;
     }
 
-    console.log(response[0]);
     if (response[0] === 200) {
       ctx.response.status = 200;
       ctx.response.body = JSON.stringify({
