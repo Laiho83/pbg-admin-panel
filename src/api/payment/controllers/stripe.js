@@ -141,7 +141,7 @@ module.exports = {
       if (CUSTOMER_ID) {
         session = await stripe.billingPortal.sessions.create({
           customer: CUSTOMER_ID,
-          return_url: "https://example.com/account",
+          return_url: "https://prettybarngood.com/user/account",
         });
       }
 
