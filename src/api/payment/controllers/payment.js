@@ -11,7 +11,8 @@ module.exports = {
   async webhookStripe(ctx) {
     const response = await stripe.stripe(ctx);
 
-    if (response === undefined) {
+    if (response === undefined || response[0] == "403") {
+      ctx.response.forbidden(response[1]);
       return;
     }
 
@@ -21,14 +22,17 @@ module.exports = {
         "Webhook Stripe successfully processed"
       );
     } else if (response[0] === 400) {
-      ctx.badRequest(response[1]);
+      ctx.response.badRequest(response[1]);
     }
   },
 
   async webhookPayPal(ctx) {
     const response = await paypal.webhookPayPal(ctx);
 
-    if (response === undefined) {
+    console.log("Paypal response: ", response[1]);
+
+    if (response === undefined || response[0] == "403") {
+      ctx.response.forbidden(response[1]);
       return;
     }
 
@@ -38,7 +42,7 @@ module.exports = {
         "Webhook - PayPal successfully processed"
       );
     } else if (response[0] === 400) {
-      ctx.badRequest(response[1]);
+      ctx.response.badRequest(response[1]);
     }
   },
 
@@ -72,7 +76,7 @@ module.exports = {
         url: response[1],
       });
     } else {
-      ctx.badRequest(`Stripe redirect failed`);
+      ctx.response.badRequest.badRequest(`Stripe redirect failed`);
     }
   },
 };

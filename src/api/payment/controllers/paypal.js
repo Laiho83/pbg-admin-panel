@@ -13,10 +13,20 @@ module.exports = {
   async webhookPayPal(ctx) {
     const body = ctx.request.body;
     const token = await module.exports.generateAccessToken();
+
+    if (!body || !token) {
+      return [
+        403,
+        "PayPal Error: Verification status failed: " + verification_status,
+      ];
+    }
+
     const verification_status = await module.exports.webhookSignature(
       ctx,
       token
     );
+
+    console.log("verification_status: ", verification_status);
 
     if (verification_status !== "SUCCESS") {
       return [
@@ -142,6 +152,7 @@ module.exports = {
       return data.access_token;
     } catch (err) {
       console.log(err);
+      return null;
     }
   },
 
@@ -152,6 +163,10 @@ module.exports = {
         `${PAYPAL_URL}/v1/notifications/verify-webhook-signature`,
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${auth}`,
+          },
           body: JSON.stringify({
             transmission_id: ctx.request.header["paypal-transmission-id"],
             transmission_time: ctx.request.header["paypal-transmission-time"],
@@ -161,16 +176,13 @@ module.exports = {
             webhook_id: PAYPAL_WEBHOOK_ID,
             webhook_event: ctx.request.body,
           }),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${auth}`,
-          },
         }
       );
       const data = await response.json();
       return data.verification_status;
     } catch (err) {
       console.log(err);
+      return null;
     }
   },
 
