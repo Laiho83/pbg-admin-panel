@@ -6,6 +6,7 @@
 const paypal = require("./paypal.js");
 const stripe = require("./stripe.js");
 const bankPayment = require("./bank-payment/bank-payment.js");
+const cebelica = require("../services/cebelica.service.js");
 
 module.exports = {
   async webhookStripe(ctx) {
@@ -46,19 +47,30 @@ module.exports = {
     }
   },
 
-  async bankPayment(ctx) {
-    const response = await bankPayment.mail(ctx);
+  bankPayment(ctx) {
+    const response = cebelica.init("Samir Kabir Kahn", 10);
 
-    if (response === undefined) {
-      return;
-    }
+    response
+      .then((res) => {
+        ctx.response.status = 200;
+      })
+      .catch((rej) => {
+        ctx.badRequest(`Cebelica error: `);
+      });
 
-    if (response) {
-      ctx.response.status = 200;
-      ctx.response.body = JSON.stringify("Email send");
-    } else {
-      ctx.badRequest(`Email not send`);
-    }
+    // ctx.response.status = 200;
+    // const response = await bankPayment.mail(ctx);
+
+    // if (response === undefined) {
+    //   return;
+    // }
+
+    // if (response) {
+    //   ctx.response.status = 200;
+    //   ctx.response.body = JSON.stringify("Email send");
+    // } else {
+    //   ctx.badRequest(`Email not send`);
+    // }
   },
 
   async customerPortal(ctx) {
